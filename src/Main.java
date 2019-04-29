@@ -3,6 +3,8 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Toolkit;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 import java.io.*;
 import java.net.ConnectException;
 import java.net.Socket;
@@ -59,6 +61,7 @@ public class Main extends JFrame {
         UIManager.put("TextField.border", 0);
         UIManager.put("Label.font", f);
         UIManager.put("Label.foreground", Color.WHITE);
+        JPanel rosso = new JPanel();
         JLabel 	titolo = new JLabel("miaYeelight"),
         		descLuce = new JLabel("Imposta il valore di luminosità:"),
         		descTemp = new JLabel("Imposta la temperatura in Kelvin:"),
@@ -74,13 +77,24 @@ public class Main extends JFrame {
         		b = new JTextField();
         JSlider temperatura = new JSlider(),
         		luminosita = new JSlider();
-        int Y = 10;
-        titolo.setBounds(10, Y, 510, 40);
-        pannello.add(titolo);
+        int Y = 0;
+        rosso.setLayout(null);
+        rosso.setBackground(new Color(160,0,0));
+        rosso.setBounds(0, Y, 530, 40);
+        pannello.add(rosso);
+        titolo.setBounds(0, Y, 530, 40);
+        titolo.setHorizontalAlignment(SwingConstants.CENTER); titolo.setVerticalAlignment(SwingConstants.CENTER);
+        rosso.add(titolo);
+        titolo.addMouseMotionListener(new MouseMotionListener() {
+        	public void mouseDragged(MouseEvent d) {
+				frame.setBounds(d.getXOnScreen()-frame.getWidth()/2, d.getYOnScreen()-25, frame.getWidth(), frame.getHeight());
+			}
+			public void mouseMoved(MouseEvent arg0) {}});
         Y += 50;
         accendi.setBounds(10, Y, 250, 40); spegni.setBounds(270, Y, 250, 40);
         accendi.addActionListener(click -> accendi());
         spegni.addActionListener(click -> spegni());
+        accendi.setFocusable(false); spegni.setFocusable(false);
         pannello.add(accendi); pannello.add(spegni);
         Y += 50;
         descLuce.setBounds(10, Y, 510, 40);
@@ -91,6 +105,7 @@ public class Main extends JFrame {
         luminosita.setMaximum(100); luminosita.setMinimum(1);
         luminosita.addChangeListener(s -> descLuce.setText("Imposta il valore di luminosità: " + luminosita.getValue() + "%"));
         impostaBr.addActionListener(click -> setBr(luminosita.getValue()));
+        impostaBr.setFocusable(false);
         pannello.add(impostaBr); pannello.add(luminosita);
         Y += 50;
         descTemp.setBounds(10, Y, 510, 40);
@@ -101,6 +116,7 @@ public class Main extends JFrame {
         temperatura.setMaximum(6500); temperatura.setMinimum(1700);
         temperatura.addChangeListener(s -> descTemp.setText("Imposta la temperatura in Kelvin: " + temperatura.getValue() + "K"));
         impostaTemp.addActionListener(click -> temperatura(temperatura.getValue()));
+        impostaTemp.setFocusable(false);
         pannello.add(impostaTemp); pannello.add(temperatura);
         Y += 50;
         descCol.setBounds(10, Y, 510, 40);
@@ -109,11 +125,13 @@ public class Main extends JFrame {
         r.setBounds(10, Y, 110, 40); g.setBounds(130, Y, 110, 40); b.setBounds(250, Y, 110, 40);
         impostaC.setBounds(370, Y, 150, 40);
         impostaC.addActionListener(click -> setRGB(Integer.parseInt(r.getText()),Integer.parseInt(g.getText()),Integer.parseInt(b.getText())));
+        impostaC.setFocusable(false);
         r.setHorizontalAlignment(SwingConstants.CENTER); g.setHorizontalAlignment(SwingConstants.CENTER); b.setHorizontalAlignment(SwingConstants.CENTER);
         pannello.add(r); pannello.add(g); pannello.add(b); pannello.add(impostaC);
         Y += 50;
         disconnetti.setBounds(10, Y, 510, 40);
         disconnetti.addActionListener(click -> chiudi());
+        disconnetti.setFocusable(false);
         pannello.add(disconnetti);
         Y += 50;
         pannello.setBounds(0, 0, 530, Y);
