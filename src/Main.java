@@ -1,8 +1,4 @@
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.io.*;
@@ -10,15 +6,9 @@ import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JSlider;
-import javax.swing.SwingConstants;
-import javax.swing.UIManager;
+import java.util.Timer;
+import java.util.TimerTask;
+import javax.swing.*;
 import javax.swing.event.ChangeListener;
 
 public class Main extends JFrame {
@@ -26,13 +16,19 @@ public class Main extends JFrame {
 	static JFrame frame;
 	static Socket telnet = null;
     static PrintStream out = null;
-    static final Font f = new Font("Arial", Font.PLAIN, 18);
-    static final Font f2 = new Font("Arial", Font.PLAIN, 16);
+    static final Font f = new Font("sans", Font.PLAIN, 18);
+    static final Font f2 = new Font("sans", Font.PLAIN, 16);
     static final Color sh1 = new Color(40,40,40);
+    static Color accentColor;
+    static JButton seguiWinAccent;
+    static JSlider luminosita = new JSlider(),
+    		hue = new JSlider(),
+    		sat = new JSlider();
+    static Timer aggiornatoreWinAccent;
     
 	public static void main(String[] args) throws IOException {
 		try { //Tentativo per IP locale 100 
-			(telnet = new Socket()).connect(new InetSocketAddress("192.168.1.100", 55443), 200);
+			(telnet = new Socket()).connect(new InetSocketAddress("192.168.1.100", 55443), 300);
             //telnet = new Socket("192.168.1.100", 55443);	//Abbandonata questa modalità perché non permette di impostare un timeout a priori
             out = new PrintStream(telnet.getOutputStream(), true);
         } catch (ConnectException | SocketTimeoutException e) {
@@ -49,7 +45,12 @@ public class Main extends JFrame {
 		if (!telnet.isConnected()) {
 			UIManager.put("OptionPane.messageFont", f2);
 			UIManager.put("OptionPane.buttonFont", f2);
-			JOptionPane.showMessageDialog(null, "Impossibile connettersi alla lampadina", "Errore di connessione", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(null, "<HTML><h2>Impossibile connettersi alla lampadina</h2><br>" +
+					"Possibili cause:" +
+					"<ul><li>la lampadina non è connessa alla corrente o al wifi</li>" + 
+					"<li>la lampadina non è configurata in modalità sviluppatore</li>" + 
+					"<li>è fallito il timeout di 200ms, in tal caso riprovare</li>" + 
+					"</ul></HTML>", "Errore di connessione", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		frame=new JFrame();
@@ -77,19 +78,18 @@ public class Main extends JFrame {
         		descLuce = new JLabel("Imposta il valore di luminosità:"),
         		descTemp = new JLabel("Imposta la temperatura in Kelvin:"),
         		descCol = new JLabel("Imposta il colore (tonalità - saturazione):");
-        JButton accendi = new JButton("Accendi"),
+        JButton disconnetti = new JButton("❌"),
+        		accendi = new JButton("Accendi"),
         		spegni = new JButton("Spegni"),
         		impostaBr = new JButton("Imposta"),
         		impostaC = new JButton("Imposta"),
         		impostaTemp = new JButton("Imposta"),
-        		disconnetti = new JButton("Disconnetti");
+        		winAccent = new JButton("Applica il colore di Windows 10");
+        seguiWinAccent = new JButton("Segui il colore di Windows 10");
         /*JTextField r = new JTextField(),
         		g = new JTextField(),
         		b = new JTextField();*/
-        JSlider temperatura = new JSlider(),
-        		luminosita = new JSlider(),
-        		hue = new JSlider(),
-        		sat = new JSlider();
+        JSlider temperatura = new JSlider();
         
         ChangeListener 	lambdaColore = s -> {
 				        	impostaC.setBackground(new Color(Color.HSBtoRGB(((float)hue.getValue())/359, ((float)sat.getValue())/100, ((float)(luminosita.getValue()>80?100:luminosita.getValue()+20))/100)));
@@ -109,7 +109,7 @@ public class Main extends JFrame {
         int Y = 0;
         rosso.setLayout(null);
         rosso.setBackground(new Color(160,0,0));
-        rosso.setBounds(0, Y, 530, 40);
+        rosso.setBounds(0, Y, 490, 40);
         pannello.add(rosso);
         titolo.setBounds(0, Y, 530, 40);
         titolo.setHorizontalAlignment(SwingConstants.CENTER); titolo.setVerticalAlignment(SwingConstants.CENTER);
@@ -119,6 +119,12 @@ public class Main extends JFrame {
 				frame.setBounds(d.getXOnScreen()-frame.getWidth()/2, d.getYOnScreen()-25, frame.getWidth(), frame.getHeight());
 			}
 			public void mouseMoved(MouseEvent arg0) {}});
+        
+        disconnetti.setBounds(490, Y, 40, 40);
+        disconnetti.addActionListener(click -> chiudi());
+        disconnetti.setFocusable(false);
+        disconnetti.setBackground(new Color(120,0,0));
+        pannello.add(disconnetti);
         Y += 50;
         accendi.setBounds(10, Y, 250, 40); spegni.setBounds(270, Y, 250, 40);
         accendi.addActionListener(click -> accendi());
@@ -145,6 +151,7 @@ public class Main extends JFrame {
         temperatura.setBounds(10, Y, 350, 40); impostaTemp.setBounds(370, Y, 150, 40);
         temperatura.setBackground(Color.BLACK); temperatura.setForeground(Color.WHITE);
         temperatura.setMaximum(6500); temperatura.setMinimum(1700);
+        temperatura.setValue(5000);
         temperatura.addChangeListener(s -> descTemp.setText("Imposta la temperatura in Kelvin: " + temperatura.getValue() + "K"));
         temperatura.addChangeListener(lambdaTemperatura);
         impostaTemp.addActionListener(click -> temperatura(temperatura.getValue()));
@@ -169,10 +176,12 @@ public class Main extends JFrame {
         hue.addChangeListener(lambdaColore);
         sat.addChangeListener(lambdaColore);
         Y += 50;
-        disconnetti.setBounds(10, Y, 510, 40);
-        disconnetti.addActionListener(click -> chiudi());
-        disconnetti.setFocusable(false);
-        pannello.add(disconnetti);
+        winAccent.setBounds(10, Y, 250, 40);
+        seguiWinAccent.setBounds(270, Y, 250, 40);
+        winAccent.setFocusable(false); seguiWinAccent.setFocusable(false);
+        winAccent.addActionListener(click -> cambiaColoreDaAccent());
+        seguiWinAccent.addActionListener(click -> tienitiAggiornataSuWindows());
+        pannello.add(winAccent); pannello.add(seguiWinAccent);
         Y += 50;
         pannello.setBounds(0, 0, 530, Y);
         pannello.setVisible(true);
@@ -198,5 +207,33 @@ public class Main extends JFrame {
 			telnet.close();
 		} catch (Exception e) {}
 		System.exit(0);
+	}
+	
+	static void tienitiAggiornataSuWindows() {
+		if (aggiornatoreWinAccent == null) {
+			seguiWinAccent.setText("Non seguire più");
+			cambiaColoreDaAccent();
+			aggiornatoreWinAccent = new Timer();
+			aggiornatoreWinAccent.schedule(new TimerTask() {
+				public void run() {
+					if (accentColor.getRGB() != SystemColor.activeCaption.getRGB()) cambiaColoreDaAccent();
+				}
+			}, 0, 2000);
+		} else {
+			aggiornatoreWinAccent.cancel();
+			aggiornatoreWinAccent = null;
+			seguiWinAccent.setText("Segui il colore di Windows 10");
+		}
+	}
+	
+	static void cambiaColoreDaAccent() {
+		accentColor = new Color(SystemColor.activeCaption.getRed(), SystemColor.activeCaption.getGreen(), SystemColor.activeCaption.getBlue());
+    	float[] hsbVals = Color.RGBtoHSB(accentColor.getRed(), accentColor.getGreen(), accentColor.getBlue(), new float[3]);
+    	hue.setValue((int)(hsbVals[0]*360));
+    	sat.setValue((int)(hsbVals[1]*70+30));
+    	luminosita.setValue((int)(hsbVals[2]*100));
+    	setHS((int)(hsbVals[0]*360), (int)(hsbVals[1]*70+30));
+    	try {Thread.sleep(100);} catch (InterruptedException e) {}
+    	setBr((int)(hsbVals[2]*100));
 	}
 }
