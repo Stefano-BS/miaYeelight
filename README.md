@@ -3,7 +3,7 @@ Java desktop application to command a single Yeelight Color bulb
 
 As a precondition, the lamp has to be enabled for developer mode first so as it'll be possible to reach it via wifi.
 
-The app can command one only bulb at once (and it's not possible to choose one, it selects automatically the first found). It is set up for a preferred IP address of 192.168.1.100 (you can set it up from your modem), but if no lamp is there, is cycles from .2 and so on. Cycling is a bit slow though.
+The app can command one only bulb at once. It is set up for a preferred IP address of 192.168.1.100 (you can set it up from your modem), but if no lamp is there, is cycles from .2 and so on (cycling is a bit slow though). While the program is scanning for a lamp, you can specify an IP address where to go directly.
 
 The lamp can be commanded in both CT (ColorTemperature) and HSB (HueSaturationBrightness) modes. Note that the Yeelight does not accepts every possible RGB values (the ones too dark are not).
 
@@ -11,7 +11,7 @@ While you can configure the lamp to bright a single color, you can also set up a
 - in flow mode, HSB mode is not supported (the user's asked for HSB values for user friendliness, but then the values are translated in RGB mode). As a result more combinations of colors cannot be reproduced, especially colors too dark and not enough saturated
 - the minimum time of a step is 50 milliseconds (which is quite fast)
 - there's a limit in the number of steps you can make the lamp follow
-In the end, you can also save (and of course load) the animation to a binary file you like. The space required is 16 Bytes per step
+In the end, you can also save (and of course load) the animation to a binary file you like. The space required is 16 Bytes per step. Default animations' files (inspired from the official app's) are provided.
 
 You can set an auto-off timer to the lamp, which must be expressed in number of minutes.
 
