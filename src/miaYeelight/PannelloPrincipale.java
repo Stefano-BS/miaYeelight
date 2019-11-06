@@ -3,6 +3,7 @@ package miaYeelight;
 import javax.swing.*;
 import java.awt.Color;
 import java.awt.event.ActionListener;
+
 import javax.swing.event.ChangeListener;
 
 final class PannelloPrincipale extends JPanel {
@@ -15,7 +16,7 @@ final class PannelloPrincipale extends JPanel {
     Timer crovescia = null;
     boolean modoDiretto = true;
 	
-	PannelloPrincipale(){
+	PannelloPrincipale(Main ref){
 		setLayout(null);
         setBackground(Main.bg);
         JLabel 	descLuce = new JLabel("Imposta il valore di luminosità:"),
@@ -28,7 +29,7 @@ final class PannelloPrincipale extends JPanel {
         		winAccent = new JButton("Applica il colore di Windows 10"),
         		animazioni = new JButton("Usa un'animazione  🎆");
         seguiWinAccent = new JButton("Segui il colore di Windows 10");
-        
+        //winAccent.setFont(new Font("Marlett", Font.PLAIN, 16));
         ChangeListener 	lambdaColore = s -> {
 				        	impostaC.setBackground(new Color(Color.HSBtoRGB(((float)hue.getValue())/359, ((float)sat.getValue())/100, ((float)(luminosita.getValue()>80?100:luminosita.getValue()+20))/100)));
 				        	impostaC.setForeground(new Color(Color.HSBtoRGB(((float)((hue.getValue()+180) % 359))/359, ((float)sat.getValue())/100, ((float)((luminosita.getValue()+50) % 100)/100))));
@@ -49,10 +50,10 @@ final class PannelloPrincipale extends JPanel {
         accendi.addActionListener(click -> {
         	if (accendi.getText().equals("💡  Accendi")) {
         		accendi.setText("🕯  Spegni");
-        		Main.accendi();
+        		ref.connessione.accendi();
         	} else {
         		accendi.setText("💡  Accendi");
-        		Main.spegni();
+        		ref.connessione.spegni();
         	}
         });
         Integer[] listaTimer = new Integer[50];
@@ -62,8 +63,8 @@ final class PannelloPrincipale extends JPanel {
         for (int i=41; i<=50; i++) listaTimer[i-1]=10*i-300;
         timer.addActionListener(click -> {
         	try {
-        		int tempo = (Integer)JOptionPane.showInputDialog(Main.frame, "Imposta il tempo (in minuti) tra cui spegnere la lampadina", "Timer di autospegnimento", JOptionPane.QUESTION_MESSAGE, Main.yee, listaTimer, 1);
-        		Main.timer(tempo);
+        		int tempo = (Integer)JOptionPane.showInputDialog(ref.frame, "Imposta il tempo (in minuti) tra cui spegnere la lampadina", "Timer di autospegnimento", JOptionPane.QUESTION_MESSAGE, ref.yee, listaTimer, 1);
+        		ref.connessione.timer(tempo);
         	} catch (Exception e) {}
         });
         accendi.setFocusable(false); timer.setFocusable(false);
@@ -75,11 +76,12 @@ final class PannelloPrincipale extends JPanel {
         Y += 50;
         luminosita.setBounds(10, Y, 510, 40); //impostaBr.setBounds(370, Y, 150, 40);
         luminosita.setBackground(Main.trasparente); luminosita.setForeground(Color.WHITE);
-        luminosita.setMaximum(100); luminosita.setMinimum(1);
+        luminosita.setMaximum(100); luminosita.setMinimum(0);
+        luminosita.setMajorTickSpacing(10); luminosita.setMinorTickSpacing(5); luminosita.setPaintTicks(true);
         luminosita.addChangeListener(s -> descLuce.setText("Imposta il valore di luminosità: " + luminosita.getValue() + "%"));
         luminosita.addChangeListener(lambdaColore);
         luminosita.addChangeListener(lambdaTemperatura);
-        luminosita.addChangeListener(eventoJSlider(e -> Main.setBr(luminosita.getValue())));
+        luminosita.addChangeListener(eventoJSlider(e -> ref.connessione.setBr(Math.max(luminosita.getValue(),1))));
         luminosita.setOpaque(false);
         //impostaBr.addActionListener(click -> Main.setBr(luminosita.getValue()));
         //impostaBr.setFocusable(false);
@@ -93,10 +95,11 @@ final class PannelloPrincipale extends JPanel {
         temperatura.setOpaque(false);
         temperatura.setMaximum(6500); temperatura.setMinimum(1700);
         temperatura.setValue(5000);
+        temperatura.setSnapToTicks(true); temperatura.setMinorTickSpacing(100); temperatura.setPaintTicks(true);
         temperatura.addChangeListener(s -> descTemp.setText("Imposta la temperatura in Kelvin: " + temperatura.getValue() + "K"));
         temperatura.addChangeListener(lambdaTemperatura);
-        temperatura.addChangeListener(eventoJSlider(e -> Main.temperatura(temperatura.getValue())));
-        impostaTemp.addActionListener(click -> Main.temperatura(temperatura.getValue()));
+        temperatura.addChangeListener(eventoJSlider(e -> ref.connessione.temperatura(temperatura.getValue())));
+        impostaTemp.addActionListener(click -> ref.connessione.temperatura(temperatura.getValue()));
         impostaTemp.setFocusable(false);
         add(impostaTemp); add(temperatura);
         Y += 50;
@@ -109,24 +112,24 @@ final class PannelloPrincipale extends JPanel {
         sat.setMaximum(100); sat.setMinimum(0);
         hue.setOpaque(false); sat.setOpaque(false);
         impostaC.setBounds(370, Y, 150, 40);
-        impostaC.addActionListener(click -> Main.setHS(hue.getValue(), sat.getValue()));
+        impostaC.addActionListener(click -> ref.connessione.setHS(hue.getValue(), sat.getValue()));
         impostaC.setFocusable(false);
         add(hue); add(sat); add(impostaC);
         hue.addChangeListener(lambdaColore);
         sat.addChangeListener(lambdaColore);
-        hue.addChangeListener(eventoJSlider(e -> Main.setHS(hue.getValue(), sat.getValue())));
-        sat.addChangeListener(eventoJSlider(e -> Main.setHS(hue.getValue(), sat.getValue())));
+        hue.addChangeListener(eventoJSlider(e -> ref.connessione.setHS(hue.getValue(), sat.getValue())));
+        sat.addChangeListener(eventoJSlider(e -> ref.connessione.setHS(hue.getValue(), sat.getValue())));
         Y += 50;
         winAccent.setBounds(10, Y, 250, 40);
         seguiWinAccent.setBounds(270, Y, 250, 40);
         winAccent.setFocusable(false); seguiWinAccent.setFocusable(false);
-        winAccent.addActionListener(click -> Main.cambiaColoreDaAccent());
-        seguiWinAccent.addActionListener(click -> Main.tienitiAggiornataSuWindows());
+        winAccent.addActionListener(click -> ref.cambiaColoreDaAccent());
+        seguiWinAccent.addActionListener(click -> ref.tienitiAggiornataSuWindows());
         add(winAccent); add(seguiWinAccent);
         Y += 50;
         animazioni.setBounds(10,Y,510,40);
         animazioni.setFocusable(false);
-        animazioni.addActionListener(click -> Main.apriPannelloAnimazioni());
+        animazioni.addActionListener(click -> ref.apriPannelloAnimazioni());
         add(animazioni);
         Y += 50;
         setSize(530, Y);

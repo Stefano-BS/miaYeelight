@@ -21,6 +21,7 @@ final class PannelloAnimazioni extends JPanel {
 		avviaAnimazione = new JButton("▶  Avvia animazione"), torna = new JButton ("⬅  Modalità statica");
 	private AnteprimaAnimazione anteprima;
 	int Y = 10;
+	
 	DocumentListener ListenerCambioTempi = new DocumentListener() {
 		public void changedUpdate(DocumentEvent a) {aggiorna(a);}
 		public void insertUpdate(DocumentEvent a) {aggiorna(a);}
@@ -28,16 +29,19 @@ final class PannelloAnimazioni extends JPanel {
 		private void aggiorna(DocumentEvent a) {
 			try {
 				int val = Integer.parseInt(a.getDocument().getText(0, a.getDocument().getLength()));
-				if (val<50) JOptionPane.showMessageDialog(Main.frame, "La lampadina non è in grado di riprodurre colori in meno di 50ms", "Errore di compilazione", JOptionPane.WARNING_MESSAGE);
+				if (val<50) JOptionPane.showMessageDialog(ref.frame, "La lampadina non è in grado di riprodurre colori in meno di 50ms", "Errore di compilazione", JOptionPane.WARNING_MESSAGE);
 				aggiornaAnteprima();
 			} catch (NumberFormatException e) {
-				JOptionPane.showMessageDialog(Main.frame, "Inserire un numero intero", "Errore di compilazione", JOptionPane.WARNING_MESSAGE);
+				JOptionPane.showMessageDialog(ref.frame, "Inserire un numero intero", "Errore di compilazione", JOptionPane.WARNING_MESSAGE);
 			} catch (BadLocationException e) {}
 		}
 	};
 	
-	PannelloAnimazioni () {
+	Main ref;
+	
+	PannelloAnimazioni (Main ref) {
 		super();
+		this.ref = ref;
 		setLayout(null);
 		setBackground(Main.bg);
 		caricaAnimazione.setFocusable(false); salvaAnimazione.setFocusable(false);
@@ -144,11 +148,11 @@ final class PannelloAnimazioni extends JPanel {
 				valori[i][2] = coloreScelto.getRed()*65536 + coloreScelto.getGreen()*256 + coloreScelto.getBlue();
 				valori[i][3] = colori.get(i)[0].getValue();
 			}
-			Main.animazione(valori);
+			ref.connessione.animazione(valori);
 		});
 		torna.setBounds(270, Y, 250, 40);
 		torna.setFocusable(false); avviaAnimazione.setFocusable(false);
-		torna.addActionListener(click -> Main.tornaStatico());
+		torna.addActionListener(click -> ref.tornaStatico());
 		Y += 50;
 		add(avviaAnimazione); add(torna);
 		setSize(new Dimension(530,Y));
@@ -196,8 +200,8 @@ final class PannelloAnimazioni extends JPanel {
 		Y += 50;
 		setSize(new Dimension(530,Y));
 		setPreferredSize(new Dimension(530,Y));
-		Main.frame.setSize(530, 40 + Y);
-		Main.frame.revalidate();
+		ref.frame.setSize(530, 40 + Y);
+		ref.frame.revalidate();
 	}
 	
 	void aggiornaAnteprima() {

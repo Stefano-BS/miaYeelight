@@ -1,15 +1,18 @@
 package miaYeelight;
 
+import java.io.IOException;
+
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 
 class PannelloConnessione extends JPanel {
 	private static final long serialVersionUID = 1L;
 	JLabel desc = new JLabel("");
 	
-	PannelloConnessione () {
+	PannelloConnessione (Main ref, boolean modoAutomatizzato) {
 		super();
 		setLayout(null);
 		JLabel 	intestazione = new JLabel("Connessione alla lampadina");
@@ -20,15 +23,36 @@ class PannelloConnessione extends JPanel {
 		desc.setBounds(10, 50, 510, 40);
 		desc.setFont(Main.f2);
 		add(desc);
-		ip.setText("192.168.1.100");
-		ip.setBounds(10, 100, 350, 40);
-		add(ip);
-		connetti.setBounds(370, 100, 140, 40);
+		ip.setHorizontalAlignment(SwingConstants.CENTER);
+		ip.setText(Connessione.IPDefaultB012 + Connessione.IPDefauldB3);
 		connetti.setFocusable(false);
 		connetti.addActionListener(click -> {
-			Main.connettiA(ip.getText());
+			if (ref.connessione.connettiA(ip.getText())) {
+				String[] proprieta = ref.connessione.scaricaProprieta();
+				ref.tornaStatico();
+				ref.configuraPannelloPrincipaleConStatoLampada(proprieta);
+				ref.schedulaExtListener();
+			}
 		});
 		add(connetti);
+		add(ip);
+		
+		if (modoAutomatizzato) {
+			ip.setBounds(10, 100, 350, 40);
+			connetti.setBounds(370, 100, 140, 40);
+		} else {
+			JButton avviaScansione = new JButton ("Scansione Auto");
+			avviaScansione.setFocusable(false);
+			avviaScansione.addActionListener(click -> {
+				try {ref.connessione.connetti(false);} catch (IOException e) {e.printStackTrace();}
+			});
+			ip.setBounds(10, 100, 200, 40);
+			avviaScansione.setBounds(370, 100, 140, 40);
+			connetti.setBounds(220, 100, 140, 40);
+			add(avviaScansione);
+			avviaScansione.setEnabled(false); ///// !
+		}
+		
 		setBounds(0,0,530,150);
 		setVisible(true);
 	}
