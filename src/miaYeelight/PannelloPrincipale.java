@@ -48,7 +48,7 @@ final class PannelloPrincipale extends JPanel {
         int Y = 10;
         accendi.setBounds(10, Y, 250, 40); timer.setBounds(270, Y, 250, 40);
         accendi.addActionListener(click -> {
-        	if (accendi.getText().equals(Strings.get("PannelloPrincipale.11"))) {
+        	if (accendi.getText().equals(Strings.get("PannelloPrincipale.0"))) {
         		accendi.setText(Strings.get("PannelloPrincipale.12"));
         		ref.connessione.accendi();
         	} else {
@@ -65,7 +65,7 @@ final class PannelloPrincipale extends JPanel {
         	try {
         		int tempo = (Integer)JOptionPane.showInputDialog(ref.frame, Strings.get("PannelloPrincipale.14"), Strings.get("PannelloPrincipale.15"), JOptionPane.QUESTION_MESSAGE, ref.yee, listaTimer, 1); 
         		ref.connessione.timer(tempo);
-        	} catch (Exception e) {}
+        	} catch (Exception e) {e.printStackTrace();}
         });
         accendi.setFocusable(false); timer.setFocusable(false);
         add(accendi); add(timer);

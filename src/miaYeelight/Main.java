@@ -283,7 +283,7 @@ public class Main extends JFrame {
 	ImageIcon caricaIcona() {
 		try {
 			return new ImageIcon(ImageIO.read(Main.class.getResource("yee.png")).getScaledInstance(40,40,Image.SCALE_SMOOTH));
-		} catch (Exception e) {return null;}
+		} catch (Exception e) {e.printStackTrace(); return null;}
 	}
 
 	static void configuraUIManager() {

@@ -33,7 +33,7 @@ final class PannelloAnimazioni extends JPanel {
 				aggiornaAnteprima();
 			} catch (NumberFormatException e) {
 				JOptionPane.showMessageDialog(ref.frame, Strings.get("PannelloAnimazioni.10"), Strings.get("PannelloAnimazioni.9"), JOptionPane.WARNING_MESSAGE);
-			} catch (BadLocationException e) {}
+			} catch (BadLocationException e) {e.printStackTrace();}
 		}
 	};
 	
@@ -84,7 +84,7 @@ final class PannelloAnimazioni extends JPanel {
 						// System.out.println("Letta riga " + i);
 						i++;
 					}
-				} catch (IOException e) {}
+				} catch (IOException e) {e.printStackTrace();}
 				f.close();
 				ridisegna();
 				aggiornaAnteprima();

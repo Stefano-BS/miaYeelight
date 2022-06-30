@@ -28,7 +28,7 @@ class Schermo {
             g /= punti;
             b /= punti;
         } 
-        catch (AWTException e) {return avg;}
+        catch (AWTException e) {e.printStackTrace(); return avg;}
         
         r = (int) (avg.getRed()*(1-peso)+r*peso);
         g = (int) (avg.getGreen()*(1-peso)+g*peso);

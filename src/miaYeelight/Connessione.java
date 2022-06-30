@@ -37,7 +37,7 @@ class Connessione {
     		DatagramPacket request = new DatagramPacket(payload, payload.length, new InetSocketAddress("239.255.255.250", 1982)); // 1982 dal protocollo Yeelight
     		discovery.send(request);
     		DatagramPacket reply = new DatagramPacket(new byte[512], 512);
-    		discovery.setSoTimeout(1000);
+    		discovery.setSoTimeout(1500);
     		discovery.receive(reply);
     		String ip = new String(reply.getData(), StandardCharsets.UTF_8);
     		discovery.disconnect();
@@ -117,10 +117,8 @@ class Connessione {
 	String[] scaricaProprieta() {
 		send("{\"id\":1,\"method\":\"get_prop\",\"params\":[\"power\", \"bright\", \"color_mode\", \"hue\", \"sat\", \"ct\", \"name\"]}");
 		String rs;
-		do {
-			rs = in.nextLine();
-			//System.out.println(rs);
-		} while (rs.charAt(6) != '1');
+		do {rs = in.nextLine();}
+		while (rs.charAt(6) != '1');
 		rs = rs.substring(19);
 		rs = rs.replace(",\"", "");
 		rs = rs.replace("]}", "");
@@ -169,6 +167,6 @@ class Connessione {
 			out.close();
 			telnet.close();
 			telnet = null;
-		} catch (Exception e) {}
+		} catch (Exception e) {e.printStackTrace();}
 	}
 }

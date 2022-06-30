@@ -17,7 +17,10 @@ class Strings {
 			default : langpack = ".eng";
 		}
 		try {RESOURCE_BUNDLE = ResourceBundle.getBundle("miaYeelight.Lang" + langpack);}
-		catch (MissingResourceException e) {RESOURCE_BUNDLE = null;}
+		catch (MissingResourceException e) {
+			e.printStackTrace(); 
+			RESOURCE_BUNDLE = null;
+		}
 	}
 
 	public static String get(String key) {
