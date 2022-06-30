@@ -11,12 +11,12 @@ import javax.swing.SwingConstants;
 class PannelloConnessione extends JPanel {
 	private static final long serialVersionUID = 1L;
 	JLabel desc = new JLabel("");
-	
+
 	PannelloConnessione (Main ref, boolean modoAutomatizzato) {
 		super();
 		setLayout(null);
-		JLabel 	intestazione = new JLabel("Connessione alla lampadina");
-		JButton connetti = new JButton("Connetti");
+		JLabel 	intestazione = new JLabel(Strings.get("PannelloConnessione.1"));
+		JButton connetti = new JButton(Strings.get("PannelloConnessione.2"));
 		JTextField ip = new JTextField("");
 		intestazione.setBounds(10, 0, 510, 40);
 		add(intestazione);
@@ -36,23 +36,30 @@ class PannelloConnessione extends JPanel {
 		});
 		add(connetti);
 		add(ip);
-		
+
 		if (modoAutomatizzato) {
 			ip.setBounds(10, 100, 350, 40);
 			connetti.setBounds(370, 100, 140, 40);
 		} else {
-			JButton avviaScansione = new JButton ("Scansione Auto");
+			JButton avviaScansione = new JButton (Strings.get("PannelloConnessione.4"));
 			avviaScansione.setFocusable(false);
 			avviaScansione.addActionListener(click -> {
-				try {ref.connessione.connetti(false);} catch (IOException e) {e.printStackTrace();}
+				try {
+					ref.connessione.connetti(false);
+					String[] proprieta = ref.connessione.scaricaProprieta();
+					ref.tornaStatico();
+					ref.configuraPannelloPrincipaleConStatoLampada(proprieta);
+					ref.schedulaExtListener();
+				} 
+				catch (IOException e) {e.printStackTrace();}
 			});
 			ip.setBounds(10, 100, 200, 40);
 			avviaScansione.setBounds(370, 100, 140, 40);
 			connetti.setBounds(220, 100, 140, 40);
 			add(avviaScansione);
-			avviaScansione.setEnabled(false); ///// !
+			avviaScansione.setEnabled(true); ///// !
 		}
-		
+
 		setBounds(0,0,530,150);
 		setVisible(true);
 	}

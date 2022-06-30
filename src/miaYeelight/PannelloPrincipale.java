@@ -3,12 +3,17 @@ package miaYeelight;
 import javax.swing.*;
 import java.awt.Color;
 import java.awt.event.ActionListener;
-
 import javax.swing.event.ChangeListener;
 
 final class PannelloPrincipale extends JPanel {
 	private static final long serialVersionUID = 1L;
-	JButton seguiWinAccent, accendi = new JButton("💡  Accendi");
+	JButton seguiWinAccent, seguiSchermo,
+			accendi = new JButton(Strings.get("PannelloPrincipale.0")),
+			timer = new JButton(Strings.get("PannelloPrincipale.1")),
+    		impostaC = new JButton(Strings.get("PannelloPrincipale.2")),
+    		impostaTemp = new JButton(Strings.get("PannelloPrincipale.2")),
+    		winAccent = new JButton(Strings.get("PannelloPrincipale.4")),
+    		animazioni = new JButton(Strings.get("PannelloPrincipale.5"));
     JSlider luminosita = new JSlider(),
     		hue = new JSlider(),
     		sat = new JSlider(),
@@ -19,16 +24,11 @@ final class PannelloPrincipale extends JPanel {
 	PannelloPrincipale(Main ref){
 		setLayout(null);
         setBackground(Main.bg);
-        JLabel 	descLuce = new JLabel("Imposta il valore di luminosità:"),
-        		descTemp = new JLabel("Imposta la temperatura in Kelvin:"),
-        		descCol = new JLabel("Imposta il colore (tonalità - saturazione):");
-        JButton timer = new JButton("⏱  Timer"),
-        		//impostaBr = new JButton("Imposta"),
-        		impostaC = new JButton("Imposta"),
-        		impostaTemp = new JButton("Imposta"),
-        		winAccent = new JButton("Applica il colore di Windows 10"),
-        		animazioni = new JButton("Usa un'animazione  🎆");
-        seguiWinAccent = new JButton("Segui il colore di Windows 10");
+        JLabel 	descLuce = new JLabel(Strings.get("PannelloPrincipale.16")),
+        		descTemp = new JLabel(Strings.get("PannelloPrincipale.18")),
+        		descCol = new JLabel(Strings.get("PannelloPrincipale.8"));
+        seguiWinAccent = new JButton(Strings.get("PannelloPrincipale.9"));
+        seguiSchermo = new JButton(Strings.get("PannelloPrincipale.10"));
         //winAccent.setFont(new Font("Marlett", Font.PLAIN, 16));
         ChangeListener 	lambdaColore = s -> {
 				        	impostaC.setBackground(new Color(Color.HSBtoRGB(((float)hue.getValue())/359, ((float)sat.getValue())/100, ((float)(luminosita.getValue()>80?100:luminosita.getValue()+20))/100)));
@@ -48,11 +48,11 @@ final class PannelloPrincipale extends JPanel {
         int Y = 10;
         accendi.setBounds(10, Y, 250, 40); timer.setBounds(270, Y, 250, 40);
         accendi.addActionListener(click -> {
-        	if (accendi.getText().equals("💡  Accendi")) {
-        		accendi.setText("🕯  Spegni");
+        	if (accendi.getText().equals(Strings.get("PannelloPrincipale.11"))) {
+        		accendi.setText(Strings.get("PannelloPrincipale.12"));
         		ref.connessione.accendi();
         	} else {
-        		accendi.setText("💡  Accendi");
+        		accendi.setText(Strings.get("PannelloPrincipale.0"));
         		ref.connessione.spegni();
         	}
         });
@@ -63,7 +63,7 @@ final class PannelloPrincipale extends JPanel {
         for (int i=41; i<=50; i++) listaTimer[i-1]=10*i-300;
         timer.addActionListener(click -> {
         	try {
-        		int tempo = (Integer)JOptionPane.showInputDialog(ref.frame, "Imposta il tempo (in minuti) tra cui spegnere la lampadina", "Timer di autospegnimento", JOptionPane.QUESTION_MESSAGE, ref.yee, listaTimer, 1);
+        		int tempo = (Integer)JOptionPane.showInputDialog(ref.frame, Strings.get("PannelloPrincipale.14"), Strings.get("PannelloPrincipale.15"), JOptionPane.QUESTION_MESSAGE, ref.yee, listaTimer, 1); 
         		ref.connessione.timer(tempo);
         	} catch (Exception e) {}
         });
@@ -78,7 +78,7 @@ final class PannelloPrincipale extends JPanel {
         luminosita.setBackground(Main.trasparente); luminosita.setForeground(Color.WHITE);
         luminosita.setMaximum(100); luminosita.setMinimum(0);
         luminosita.setMajorTickSpacing(10); luminosita.setMinorTickSpacing(5); luminosita.setPaintTicks(true);
-        luminosita.addChangeListener(s -> descLuce.setText("Imposta il valore di luminosità: " + luminosita.getValue() + "%"));
+        luminosita.addChangeListener(s -> descLuce.setText(Strings.get("PannelloPrincipale.16") + luminosita.getValue() + "%")); 
         luminosita.addChangeListener(lambdaColore);
         luminosita.addChangeListener(lambdaTemperatura);
         luminosita.addChangeListener(eventoJSlider(e -> ref.connessione.setBr(Math.max(luminosita.getValue(),1))));
@@ -96,7 +96,7 @@ final class PannelloPrincipale extends JPanel {
         temperatura.setMaximum(6500); temperatura.setMinimum(1700);
         temperatura.setValue(5000);
         temperatura.setSnapToTicks(true); temperatura.setMinorTickSpacing(100); temperatura.setPaintTicks(true);
-        temperatura.addChangeListener(s -> descTemp.setText("Imposta la temperatura in Kelvin: " + temperatura.getValue() + "K"));
+        temperatura.addChangeListener(s -> descTemp.setText(Strings.get("PannelloPrincipale.18") + temperatura.getValue() + "K")); 
         temperatura.addChangeListener(lambdaTemperatura);
         temperatura.addChangeListener(eventoJSlider(e -> ref.connessione.temperatura(temperatura.getValue())));
         impostaTemp.addActionListener(click -> ref.connessione.temperatura(temperatura.getValue()));
@@ -127,6 +127,10 @@ final class PannelloPrincipale extends JPanel {
         seguiWinAccent.addActionListener(click -> ref.tienitiAggiornataSuWindows());
         add(winAccent); add(seguiWinAccent);
         Y += 50;
+        seguiSchermo.setBounds(10, Y, 510, 40);
+        seguiSchermo.addActionListener(click -> ref.seguiColoreSchermo());
+        add(seguiSchermo);
+        Y += 50;
         animazioni.setBounds(10,Y,510,40);
         animazioni.setFocusable(false);
         animazioni.addActionListener(click -> ref.apriPannelloAnimazioni());
@@ -147,5 +151,16 @@ final class PannelloPrincipale extends JPanel {
         	crovescia.setRepeats(false);
         	crovescia.start();
         };
+	}
+	
+	void abilitaControlli(boolean abilita) {
+		seguiWinAccent.setEnabled(abilita);
+		hue.setEnabled(abilita);
+		luminosita.setEnabled(abilita);
+		sat.setEnabled(abilita);
+		temperatura.setEnabled(abilita);
+		impostaC.setEnabled(abilita);
+		impostaTemp.setEnabled(abilita);
+		winAccent.setEnabled(abilita);
 	}
 }

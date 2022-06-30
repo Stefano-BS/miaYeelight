@@ -16,9 +16,9 @@ final class PannelloAnimazioni extends JPanel {
 	private ArrayList<JSlider[]> colori = new ArrayList<>();
 	private ArrayList<JButton> aggiuntori = new ArrayList<>();
 	private ArrayList<JButton> rimovitori = new ArrayList<>();
-	private JLabel[] intestazione = {new JLabel("Durata"), new JLabel("Luce"), new JLabel("Tonalità"), new JLabel("Saturazione")};
-	private JButton caricaAnimazione = new JButton("📦  Carica animazione"), salvaAnimazione = new JButton("💾  Salva questa animazione"),
-		avviaAnimazione = new JButton("▶  Avvia animazione"), torna = new JButton ("⬅  Modalità statica");
+	private JLabel[] intestazione = {new JLabel(Strings.get("PannelloAnimazioni.0")), new JLabel(Strings.get("PannelloAnimazioni.1")), new JLabel(Strings.get("PannelloAnimazioni.2")), new JLabel(Strings.get("PannelloAnimazioni.3"))};
+	private JButton caricaAnimazione = new JButton(Strings.get("PannelloAnimazioni.4")), salvaAnimazione = new JButton(Strings.get("PannelloAnimazioni.5")),
+		avviaAnimazione = new JButton(Strings.get("PannelloAnimazioni.6")), torna = new JButton (Strings.get("PannelloAnimazioni.7"));
 	private AnteprimaAnimazione anteprima;
 	int Y = 10;
 	
@@ -29,10 +29,10 @@ final class PannelloAnimazioni extends JPanel {
 		private void aggiorna(DocumentEvent a) {
 			try {
 				int val = Integer.parseInt(a.getDocument().getText(0, a.getDocument().getLength()));
-				if (val<50) JOptionPane.showMessageDialog(ref.frame, "La lampadina non è in grado di riprodurre colori in meno di 50ms", "Errore di compilazione", JOptionPane.WARNING_MESSAGE);
+				if (val<50) JOptionPane.showMessageDialog(ref.frame, Strings.get("PannelloAnimazioni.8"), Strings.get("PannelloAnimazioni.9"), JOptionPane.WARNING_MESSAGE);
 				aggiornaAnteprima();
 			} catch (NumberFormatException e) {
-				JOptionPane.showMessageDialog(ref.frame, "Inserire un numero intero", "Errore di compilazione", JOptionPane.WARNING_MESSAGE);
+				JOptionPane.showMessageDialog(ref.frame, Strings.get("PannelloAnimazioni.10"), Strings.get("PannelloAnimazioni.9"), JOptionPane.WARNING_MESSAGE);
 			} catch (BadLocationException e) {}
 		}
 	};
@@ -48,7 +48,7 @@ final class PannelloAnimazioni extends JPanel {
 		caricaAnimazione.setBounds(10, Y, 250, 40); 
 		caricaAnimazione.addActionListener(click -> {
 			FileDialog picker = new java.awt.FileDialog((java.awt.Frame) null);
-			picker.setTitle("Scegli l'animazione da caricare");
+			picker.setTitle(Strings.get("PannelloAnimazioni.12"));
 			picker.setMode(FileDialog.LOAD);
 			picker.setVisible(true);
 			try {
@@ -81,7 +81,7 @@ final class PannelloAnimazioni extends JPanel {
 						add(tempi.get(i));
 						add(colori.get(i)[0]); add(colori.get(i)[1]); add(colori.get(i)[2]);
 						add(aggiuntori.get(i)); add(rimovitori.get(i));
-						System.out.println("Letta riga " + i);
+						// System.out.println("Letta riga " + i);
 						i++;
 					}
 				} catch (IOException e) {}
@@ -94,9 +94,9 @@ final class PannelloAnimazioni extends JPanel {
 		salvaAnimazione.setBounds(270, Y, 250, 40);
 		salvaAnimazione.addActionListener(click -> {
 			FileDialog picker = new java.awt.FileDialog((java.awt.Frame) null);
-			picker.setTitle("Scegli dove salvare");
+			picker.setTitle(Strings.get("PannelloAnimazioni.16"));
 			picker.setMode(FileDialog.SAVE);
-			picker.setFile("animazione.yan");
+			picker.setFile(Strings.get("PannelloAnimazioni.13"));
 			picker.setVisible(true);
 			try {DataOutputStream f = new DataOutputStream(new FileOutputStream(picker.getDirectory() + picker.getFile()));
 				for (int i=0; i<tempi.size(); i++)	{

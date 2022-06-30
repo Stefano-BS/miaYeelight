@@ -19,31 +19,33 @@ public class Main extends JFrame {
     		bg = new Color(0,0,0,255),
     		trasparente = new Color(0,0,0,0);
 	final ImageIcon yee = caricaIcona();
-	
+
 	Color accentColor;
-	Timer aggiornatoreWinAccent;
+	Timer aggiornatoreWinAccent, aggiornatoreSchermo;
 	Timer extList = new Timer();
 	int lkpX = 0, lkpY = 0;
-	
+
 	JFrame frame;
 	JPanel rosso = new JPanel();
 	JLabel titolo;
 	PannelloConnessione pannelloConnessione;
 	PannelloPrincipale pannello;
 	PannelloAnimazioni pannelloAnimazioni;
-	String nomeLampadina = "miaYeelight";
-	
+	String nomeLampadina;
+
 	Connessione connessione = null;
-    
+
 	public static void main(String[] args) throws IOException {
+		Strings.configMessages();
 		configuraUIManager();
 		new Main();
 	}
-	
+
 	Main() throws IOException {
+		nomeLampadina = Strings.get("AppName");
 		frame = new JFrame();
 		frame.setUndecorated(true);
-		frame.setTitle("miaYeelight");
+		frame.setTitle(nomeLampadina);
 		frame.setResizable(false);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setIconImage(yee.getImage());
@@ -56,25 +58,27 @@ public class Main extends JFrame {
     	int screenW = (int)(screenSize.getWidth());
     	int screenH = (int)(screenSize.getHeight());
         frame.setBounds(screenW/2-265, screenH/2-pannelloConnessione.getHeight(), 530, rosso.getHeight() + pannelloConnessione.getHeight());
-        
+
         connessione = new Connessione(this);
-        if (connessione.connetti(true)) {
+        if (connessione.connetti(false)) {
         	String[] proprieta = connessione.scaricaProprieta();
         	tornaStatico();
 			configuraPannelloPrincipaleConStatoLampada(proprieta);
 			schedulaExtListener();
 			frame.setVisible(true);
-        } else JOptionPane.showMessageDialog(null, "<HTML><h2>Impossibile connettersi alla lampadina</h2><br>" +
-				"Possibili cause:" +
-				"<ul><li>la lampadina non è connessa alla corrente o al wifi</li>" + 
-				"<li>la lampadina non è configurata in modalità sviluppatore</li>" + 
-				"<li>è fallito il timeout di 200ms, in tal caso riprovare</li>" + 
-				"</ul></HTML>", "Errore di connessione", JOptionPane.ERROR_MESSAGE, yee);
+        } else JOptionPane.showMessageDialog(null, 
+        		Strings.get("Main.4") +
+				Strings.get("Main.5") +
+				Strings.get("Main.6") +
+				Strings.get("Main.7") +
+				Strings.get("Main.8") +
+				"</ul></HTML>", Strings.get("Main.10"), JOptionPane.ERROR_MESSAGE, yee);
 	}
-	
+
 	void configuraPannelloPrincipaleConStatoLampada(String [] statoIniziale) {
-        pannello.modoDiretto = false;
-        if (statoIniziale[0].equals("on")) pannello.accendi.setText("🕯  Spegni");
+		if (statoIniziale[0].equals("code")) return;
+		pannello.modoDiretto = false;
+        if (statoIniziale[0].equals("on")) pannello.accendi.setText(Strings.get("PannelloPrincipale.12"));
         pannello.luminosita.setValue(Integer.parseInt(statoIniziale[1]));
         pannello.temperatura.setValue(Integer.parseInt(statoIniziale[5]));
         pannello.hue.setValue(Integer.parseInt(statoIniziale[3]));
@@ -83,24 +87,25 @@ public class Main extends JFrame {
         titolo.setText(nomeLampadina);
         pannello.modoDiretto = true;
 	}
-	
-	
+
+
 	void tornaModalitaRicerca() {
 		terminaAggiornatoreWinAccent();
 		extList.cancel();
 		extList = new Timer();
 		connessione.chiudi();
 		connessione = new Connessione(this);
-		nomeLampadina = "miaYeelight";
+		nomeLampadina = Strings.get("AppName");
 		frame.getContentPane().removeAll();
 		frame.getContentPane().add(rosso, BorderLayout.NORTH);
 		frame.getContentPane().add(pannelloConnessione = new PannelloConnessione(this, false), BorderLayout.CENTER);
         frame.setSize(530, rosso.getHeight() + pannelloConnessione.getHeight());
         frame.revalidate();
 	}
-	
+
 	void apriPannelloAnimazioni() {
 		terminaAggiornatoreWinAccent();
+		terminaAggiornatoreColoreSchermo();
 		if (pannelloAnimazioni == null) pannelloAnimazioni = new PannelloAnimazioni(this);
 		frame.getContentPane().removeAll();
 		frame.getContentPane().add(rosso, BorderLayout.NORTH);
@@ -108,7 +113,7 @@ public class Main extends JFrame {
 		frame.setSize(rosso.getWidth(), rosso.getHeight() + pannelloAnimazioni.getHeight());
 		frame.revalidate();
 	}
-	
+
 	void tornaStatico() {
 		if (pannello == null) {
 			pannello = new PannelloPrincipale(this);
@@ -120,7 +125,7 @@ public class Main extends JFrame {
 		frame.setSize(rosso.getWidth(), rosso.getHeight() + pannello.getHeight());
 		frame.revalidate();
 	}
-	
+
 	void creaBarraDelTitolo() {
 		titolo = new JLabel(nomeLampadina);
 		JButton disconnetti = new JButton("❌");
@@ -134,7 +139,7 @@ public class Main extends JFrame {
 			public void mouseClicked(MouseEvent click) {
 				if (click.getX() > 490) disconnetti.doClick();
 				else if (click.getX() > 40) {
-					String nome = JOptionPane.showInputDialog("Scegli il nuovo nome di questa lampadina", nomeLampadina);
+					String nome = JOptionPane.showInputDialog(Strings.get("Main.16"), nomeLampadina);
 					if (nome != null && nome != "") {
 						connessione.cambiaNome(nome);
 						nomeLampadina = nome;
@@ -171,11 +176,11 @@ public class Main extends JFrame {
 			public void mouseMoved(MouseEvent d) {
 				if (d.getX() > 490) disconnetti.setBackground(new Color(90,0,0));
 				else disconnetti.setBackground(new Color(120,0,0));
-				if (d.getX() <= 40 && !Arrays.asList(frame.getContentPane().getComponents()).contains(pannelloConnessione)) titolo.setText("Cambia lampadina ...");
+				if (d.getX() <= 40 && !Arrays.asList(frame.getContentPane().getComponents()).contains(pannelloConnessione)) titolo.setText(Strings.get("Main.18"));
 				else titolo.setText(nomeLampadina);
 			}
 		});
-        
+
         disconnetti.setBounds(490, 0, 40, 40);
         disconnetti.addActionListener(click -> {
         	connessione.chiudi();
@@ -189,11 +194,11 @@ public class Main extends JFrame {
         rosso.add(icona);
         rosso.setPreferredSize(new Dimension(530,40));
 	}
-	
+
 	void schedulaExtListener() {
 		extList.schedule(new TimerTask() {
 			public void run() {
-				if (Arrays.asList(frame.getContentPane().getComponents()).contains(pannello)) {
+				if (Arrays.asList(frame.getContentPane().getComponents()).contains(pannello) && (pannello.crovescia == null || !pannello.crovescia.isRunning()) && aggiornatoreSchermo == null) {
 					boolean modoPrima = pannello.modoDiretto;
 					pannello.modoDiretto = false;
 					configuraPannelloPrincipaleConStatoLampada(connessione.scaricaProprieta());
@@ -202,10 +207,11 @@ public class Main extends JFrame {
 			}
 		}, 2500, 2697);
 	}
-	
+
 	void tienitiAggiornataSuWindows() {
-		if (aggiornatoreWinAccent == null) {
-			pannello.seguiWinAccent.setText("⏸ Non seguire più");
+		if (aggiornatoreWinAccent == null && aggiornatoreSchermo == null) {
+			pannello.seguiSchermo.setEnabled(false);
+			pannello.seguiWinAccent.setText(Strings.get("Main.19"));
 			cambiaColoreDaAccent();
 			aggiornatoreWinAccent = new Timer();
 			aggiornatoreWinAccent.schedule(new TimerTask() {
@@ -215,15 +221,16 @@ public class Main extends JFrame {
 			}, 0, 2000);
 		} else terminaAggiornatoreWinAccent();
 	}
-	
+
 	void terminaAggiornatoreWinAccent() {
 		if (aggiornatoreWinAccent != null) {
+			pannello.seguiSchermo.setEnabled(true);
 			aggiornatoreWinAccent.cancel();
 			aggiornatoreWinAccent = null;
-			pannello.seguiWinAccent.setText("Segui il colore di Windows 10");
+			pannello.seguiWinAccent.setText(Strings.get("PannelloPrincipale.9"));
 		}
 	}
-	
+
 	void cambiaColoreDaAccent() {
 		accentColor = new Color(SystemColor.activeCaption.getRed(), SystemColor.activeCaption.getGreen(), SystemColor.activeCaption.getBlue());
     	float[] hsbVals = Color.RGBtoHSB(accentColor.getRed(), accentColor.getGreen(), accentColor.getBlue(), new float[3]);
@@ -238,13 +245,47 @@ public class Main extends JFrame {
     	connessione.setBr((int)(hsbVals[2]*100));
 	}
 	
+	void seguiColoreSchermo() {
+		if (aggiornatoreWinAccent == null && aggiornatoreSchermo == null) {
+			pannello.abilitaControlli(false);
+			pannello.seguiSchermo.setText(Strings.get("Main.19"));
+			aggiornatoreSchermo = new Timer();
+			aggiornatoreSchermo.schedule(new TimerTask() {
+				int inviareComando = 0;
+				public void run() {
+					Color c = Schermo.ottieniMedia(inviareComando==2? 50 : 150, inviareComando==2? 0.25 : 0.4, 0.15);
+					float[] hsbVals = Color.RGBtoHSB(c.getRed(), c.getGreen(), c.getBlue(), new float[3]);
+			    	boolean modoPrima = pannello.modoDiretto;
+			    	pannello.modoDiretto = false;
+			    	pannello.hue.setValue((int)(hsbVals[0]*360));
+			    	pannello.sat.setValue((int)(hsbVals[1]*70+30));
+			    	pannello.modoDiretto = modoPrima;
+					if (inviareComando == 2) {
+						inviareComando = 0;
+				    	connessione.setHS((int)(hsbVals[0]*360), (int)(hsbVals[1]*70+30));
+					}
+					else inviareComando++;
+				}
+			}, 0, 340);
+		} else terminaAggiornatoreColoreSchermo();
+	}
 	
+	void terminaAggiornatoreColoreSchermo() {
+		if (aggiornatoreSchermo != null) {
+			pannello.abilitaControlli(true);
+			aggiornatoreSchermo.cancel();
+			aggiornatoreSchermo = null;
+			pannello.seguiSchermo.setText(Strings.get("PannelloPrincipale.10"));
+		}
+	}
+
+
 	ImageIcon caricaIcona() {
 		try {
 			return new ImageIcon(ImageIO.read(Main.class.getResource("yee.png")).getScaledInstance(40,40,Image.SCALE_SMOOTH));
 		} catch (Exception e) {return null;}
 	}
-	
+
 	static void configuraUIManager() {
     	//UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		UIManager.put("Button.font", f2);
