@@ -13,8 +13,8 @@ import java.awt.event.MouseMotionListener;
 
 public class Main extends JFrame {
 	private static final long serialVersionUID = 0L;
-	static final Font f = new Font("sans", Font.PLAIN, 18);
-    static final Font f2 = new Font("sans", Font.PLAIN, 16);
+	static final Font f = new Font("sans", Font.PLAIN, Schermo.d(18));
+    static final Font f2 = new Font("sans", Font.PLAIN, Schermo.d(16));
     static final Color sh1 = new Color(40,40,40,255),
     		bg = new Color(0,0,0,255),
     		trasparente = new Color(0,0,0,0);
@@ -51,13 +51,13 @@ public class Main extends JFrame {
 		frame.setIconImage(yee.getImage());
 		frame.setBackground(new Color(0,0,0,0));
 		creaBarraDelTitolo();
-		rosso.setBounds(0, 0, 530, 40);
+		rosso.setBounds(0, 0, Schermo.d(530), Schermo.d(40));
         frame.getContentPane().add(rosso,BorderLayout.NORTH);
         frame.getContentPane().add(pannelloConnessione = new PannelloConnessione(this, true), BorderLayout.CENTER);
         Dimension screenSize=Toolkit.getDefaultToolkit().getScreenSize();
     	int screenW = (int)(screenSize.getWidth());
     	int screenH = (int)(screenSize.getHeight());
-        frame.setBounds(screenW/2-265, screenH/2-pannelloConnessione.getHeight(), 530, rosso.getHeight() + pannelloConnessione.getHeight());
+        frame.setBounds(screenW/2-265, screenH/2-pannelloConnessione.getHeight(), rosso.getWidth(), rosso.getHeight() + pannelloConnessione.getHeight());
 
         connessione = new Connessione(this);
         if (connessione.connetti(false)) {
@@ -85,6 +85,8 @@ public class Main extends JFrame {
         pannello.sat.setValue(Integer.parseInt(statoIniziale[4]));
         nomeLampadina = statoIniziale[6];
         titolo.setText(nomeLampadina);
+        pannello.ultimaModalita = !statoIniziale[2].equals("2");
+        pannello.aggiornaAnteprima();
         pannello.modoDiretto = true;
 	}
 
@@ -99,7 +101,7 @@ public class Main extends JFrame {
 		frame.getContentPane().removeAll();
 		frame.getContentPane().add(rosso, BorderLayout.NORTH);
 		frame.getContentPane().add(pannelloConnessione = new PannelloConnessione(this, false), BorderLayout.CENTER);
-        frame.setSize(530, rosso.getHeight() + pannelloConnessione.getHeight());
+        frame.setSize(rosso.getWidth(), rosso.getHeight() + pannelloConnessione.getHeight());
         frame.revalidate();
 	}
 
@@ -117,7 +119,7 @@ public class Main extends JFrame {
 	void tornaStatico() {
 		if (pannello == null) {
 			pannello = new PannelloPrincipale(this);
-			pannello.setBounds(0, 0, 530, pannello.getHeight());
+			pannello.setBounds(0, 0, pannello.getWidth(), pannello.getHeight());
 		}
 		frame.getContentPane().removeAll();
 		frame.getContentPane().add(rosso, BorderLayout.NORTH);
@@ -132,13 +134,13 @@ public class Main extends JFrame {
 		JLabel icona = new JLabel();
 		rosso.setLayout(null);
         rosso.setBackground(new Color(160,0,0));
-        titolo.setBounds(0, 0, 530, 40);
+        titolo.setBounds(0, 0, Schermo.d(530), Schermo.d(40));
         titolo.setHorizontalAlignment(SwingConstants.CENTER); titolo.setVerticalAlignment(SwingConstants.CENTER);
         rosso.add(titolo);
         titolo.addMouseListener(new MouseListener() {
 			public void mouseClicked(MouseEvent click) {
-				if (click.getX() > 490) disconnetti.doClick();
-				else if (click.getX() > 40) {
+				if (click.getX() > Schermo.d(490)) disconnetti.doClick();
+				else if (click.getX() > Schermo.d(40)) {
 					String nome = JOptionPane.showInputDialog(Strings.get("Main.16"), nomeLampadina);
 					if (nome != null && nome != "") {
 						connessione.cambiaNome(nome);
@@ -149,21 +151,21 @@ public class Main extends JFrame {
 				else if (!Arrays.asList(frame.getContentPane().getComponents()).contains(pannelloConnessione)) tornaModalitaRicerca();
 			}
 			public void mouseEntered(MouseEvent click) {
-				if (click.getX() > 490) disconnetti.setBackground(new Color(90,0,0));}
+				if (click.getX() > Schermo.d(490)) disconnetti.setBackground(new Color(90,0,0));}
 			public void mouseExited(MouseEvent click) {
 				disconnetti.setBackground(new Color(120,0,0));
 				lkpX = 0; lkpY = 0;
 				titolo.setText(nomeLampadina);}
 			public void mousePressed(MouseEvent click) {
-				if (click.getX() > 490) disconnetti.setBackground(new Color(60,0,0));}
+				if (click.getX() > Schermo.d(490)) disconnetti.setBackground(new Color(60,0,0));}
 			public void mouseReleased(MouseEvent click) {
-				if (click.getX() > 490) disconnetti.setBackground(new Color(120,0,0));
+				if (click.getX() > Schermo.d(490)) disconnetti.setBackground(new Color(120,0,0));
 				lkpX = 0; lkpY = 0;
 			}
         });
         titolo.addMouseMotionListener(new MouseMotionListener() {
         	public void mouseDragged(MouseEvent d) {
-        		if (d.getX() < 490) {
+        		if (d.getX() < Schermo.d(490)) {
         			int nuovaX = d.getXOnScreen(), nuovaY = d.getYOnScreen();
     				if (lkpX !=0 || lkpY!=0) {
 	        			int xInc = nuovaX-lkpX,
@@ -174,14 +176,14 @@ public class Main extends JFrame {
     			}
 			}
 			public void mouseMoved(MouseEvent d) {
-				if (d.getX() > 490) disconnetti.setBackground(new Color(90,0,0));
+				if (d.getX() > Schermo.d(490)) disconnetti.setBackground(new Color(90,0,0));
 				else disconnetti.setBackground(new Color(120,0,0));
-				if (d.getX() <= 40 && !Arrays.asList(frame.getContentPane().getComponents()).contains(pannelloConnessione)) titolo.setText(Strings.get("Main.18"));
+				if (d.getX() <= Schermo.d(40) && !Arrays.asList(frame.getContentPane().getComponents()).contains(pannelloConnessione)) titolo.setText(Strings.get("Main.18"));
 				else titolo.setText(nomeLampadina);
 			}
 		});
 
-        disconnetti.setBounds(490, 0, 40, 40);
+        disconnetti.setBounds(Schermo.d(490), 0, Schermo.d(40), Schermo.d(40));
         disconnetti.addActionListener(click -> {
         	connessione.chiudi();
         	System.exit(0);
@@ -190,9 +192,9 @@ public class Main extends JFrame {
         disconnetti.setBackground(new Color(120,0,0));
         rosso.add(disconnetti);
         icona.setIcon(yee);
-        icona.setBounds(0,0,40,40);
+        icona.setBounds(0,0,Schermo.d(40),Schermo.d(40));
         rosso.add(icona);
-        rosso.setPreferredSize(new Dimension(530,40));
+        rosso.setPreferredSize(new Dimension(Schermo.d(530),Schermo.d(40)));
 	}
 
 	void schedulaExtListener() {
@@ -282,7 +284,7 @@ public class Main extends JFrame {
 
 	ImageIcon caricaIcona() {
 		try {
-			return new ImageIcon(ImageIO.read(Main.class.getResource("yee.png")).getScaledInstance(40,40,Image.SCALE_SMOOTH));
+			return new ImageIcon(ImageIO.read(Main.class.getResource("yee.png")).getScaledInstance(Schermo.d(40),Schermo.d(40),Image.SCALE_SMOOTH));
 		} catch (Exception e) {e.printStackTrace(); return null;}
 	}
 

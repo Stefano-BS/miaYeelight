@@ -7,14 +7,15 @@ import java.awt.AWTException;
 
 class Schermo {
 	static Color avg = new Color(0,0,0);
+	static int w = Toolkit.getDefaultToolkit().getScreenSize().width;
+	static int npx = w*Toolkit.getDefaultToolkit().getScreenSize().height;
+	static final double ratio = ((double)Toolkit.getDefaultToolkit().getScreenResolution())/100;
 	
     public static Color ottieniMedia(int punti, double peso, double varianza) {
     	int r = 0, g = 0, b = 0;
     	if (varianza!=0) punti *= 1+(Math.random()-0.5)*varianza;
-    	int w = Toolkit.getDefaultToolkit().getScreenSize().width;
-    	int npx = w*Toolkit.getDefaultToolkit().getScreenSize().height;
     	int passo = (int)Math.floor(((double)npx)/punti);
-        
+    	
     	try {
             Robot robot = new Robot();
             
@@ -35,5 +36,9 @@ class Schermo {
         b = (int) (avg.getBlue()*(1-peso)+b*peso);
         avg = new Color(r, g, b);
         return avg;
+    }
+    
+    public static int d(int dim) {
+    	return (int) (dim * ratio);
     }
 }

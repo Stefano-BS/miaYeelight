@@ -18,9 +18,9 @@ class PannelloConnessione extends JPanel {
 		JLabel 	intestazione = new JLabel(Strings.get("PannelloConnessione.1"));
 		JButton connetti = new JButton(Strings.get("PannelloConnessione.2"));
 		JTextField ip = new JTextField("");
-		intestazione.setBounds(10, 0, 510, 40);
+		intestazione.setBounds(Schermo.d(10), 0, Schermo.d(510), Schermo.d(40));
 		add(intestazione);
-		desc.setBounds(10, 50, 510, 40);
+		desc.setBounds(Schermo.d(10), Schermo.d(50), Schermo.d(510), Schermo.d(40));
 		desc.setFont(Main.f2);
 		add(desc);
 		ip.setHorizontalAlignment(SwingConstants.CENTER);
@@ -38,8 +38,8 @@ class PannelloConnessione extends JPanel {
 		add(ip);
 
 		if (modoAutomatizzato) {
-			ip.setBounds(10, 100, 350, 40);
-			connetti.setBounds(370, 100, 140, 40);
+			ip.setBounds(Schermo.d(10), Schermo.d(100), Schermo.d(350), Schermo.d(40));
+			connetti.setBounds(Schermo.d(370), Schermo.d(100), Schermo.d(150), Schermo.d(40));
 		} else {
 			JButton avviaScansione = new JButton (Strings.get("PannelloConnessione.4"));
 			avviaScansione.setFocusable(false);
@@ -53,14 +53,14 @@ class PannelloConnessione extends JPanel {
 				} 
 				catch (IOException e) {e.printStackTrace();}
 			});
-			ip.setBounds(10, 100, 200, 40);
-			avviaScansione.setBounds(370, 100, 140, 40);
-			connetti.setBounds(220, 100, 140, 40);
+			ip.setBounds(Schermo.d(10), Schermo.d(100), Schermo.d(200), Schermo.d(40));
+			avviaScansione.setBounds(Schermo.d(370), Schermo.d(100), Schermo.d(140), Schermo.d(40));
+			connetti.setBounds(Schermo.d(220), Schermo.d(100), Schermo.d(140), Schermo.d(40));
 			add(avviaScansione);
-			avviaScansione.setEnabled(true); ///// !
+			avviaScansione.setEnabled(true);
 		}
 
-		setBounds(0,0,530,150);
+		setBounds(0,0,Schermo.d(530),Schermo.d(150));
 		setVisible(true);
 	}
 }
