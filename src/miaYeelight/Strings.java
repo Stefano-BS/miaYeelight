@@ -8,8 +8,12 @@ class Strings {
 	private static ResourceBundle RESOURCE_BUNDLE;
 
 	public static void configMessages() {
+		configMessages(Locale.getDefault().getLanguage());
+	}
+	
+	public static void configMessages(String lang) {
 		String langpack;
-		switch (Locale.getDefault().getLanguage()) {
+		switch (lang) {
 			case "it" : langpack = ".ita"; break;
 			case "pt" : langpack = ".ptg"; break;
 			case "es" : langpack = ".esp"; break;

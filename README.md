@@ -2,6 +2,7 @@
 Java desktop application to command a Yeelight Color bulb, supports:
 
 **English - Italiano - Español - Português**
+(language is inferred automatically, if not provided as calling parameter lang:val, val between it, en, es, pt)
 
 As a precondition, the lamp has to be enabled for developer mode first so as it'll be possible to reach it via wifi.
 
@@ -15,10 +16,13 @@ While you can configure the lamp to bright a single color, you can also set up a
 - in flow mode, HSB mode is not supported (the user's asked for HSB values for user friendliness, but then the values are translated in RGB mode). As a result more combinations of colors cannot be reproduced, especially colors too dark and not enough saturated
 - the minimum time of a step is 50 milliseconds (which is quite fast)
 - there's a limit in the number of steps you can make the lamp follow
-In the end, you can also save (and of course load) the animation to a binary file you like. The space required is 16 Bytes per step. Default animations' files (inspired from the official app's) are provided.
+In the end, you can also save (and of course load) the animation to a binary file you like. Default animations' files (inspired from the official app's) are provided.
 
 You can set an **auto-off** timer to the lamp, which must be expressed in number of minutes.
 
 You can even make the lamp **follow the most prominent color on your screen**: perfect for creating an envolving atmosphere in your room while you're enjoying some content you like.
 
 The lamp can also be configured to set once, or keep track of the SystemColors.activeCaption color. If you're running Windows 10, you can gorgeously make the lamp follow your accent color (being updated by your desktop presentation if set up for doing so). In order to get this state of art, you've got to install a free app from the Microsoft Store called "Accent Applicator". I raccomend that app, even if you don't like this feature. Keep in mind that without that app, the lamp will always find the typical Windows light blue shade.
+
+
+NOTE: The app is pre packaged in an executable JAR, compiled for Java 17, nonetheless the code is compatible with Java 8.

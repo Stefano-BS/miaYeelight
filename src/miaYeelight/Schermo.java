@@ -9,7 +9,7 @@ class Schermo {
 	static Color avg = new Color(0,0,0);
 	static int w = Toolkit.getDefaultToolkit().getScreenSize().width;
 	static int npx = w*Toolkit.getDefaultToolkit().getScreenSize().height;
-	static final double ratio = ((double)Toolkit.getDefaultToolkit().getScreenResolution())/100;
+	static double ratio = ((double)Toolkit.getDefaultToolkit().getScreenResolution())/100;;
 	
     public static Color ottieniMedia(int punti, double peso, double varianza) {
     	int r = 0, g = 0, b = 0;

@@ -2,6 +2,7 @@ package miaYeelight;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.awt.*;
@@ -11,10 +12,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
-public class Main extends JFrame {
-	private static final long serialVersionUID = 0L;
-	static final Font f = new Font("sans", Font.PLAIN, Schermo.d(18));
-    static final Font f2 = new Font("sans", Font.PLAIN, Schermo.d(16));
+
+public class Main {
+	static Font f, f2;
     static final Color sh1 = new Color(40,40,40,255),
     		bg = new Color(0,0,0,255),
     		trasparente = new Color(0,0,0,0);
@@ -34,9 +34,25 @@ public class Main extends JFrame {
 	String nomeLampadina;
 
 	Connessione connessione = null;
-
+	
+	
 	public static void main(String[] args) throws IOException {
+		/*Object[] keys = System.getenv().keySet().toArray();
+		for (int i=0; i<System.getenv().size(); i++) {
+			System.out.print(keys[i] + ": ");
+			System.out.println(System.getenv().get(keys[i]));
+		}*/
 		Strings.configMessages();
+		if (args != null) {
+			List<String> parametri = List.of(args);
+			for(String parametro : parametri) {
+				if (parametro.startsWith("ratio:")) {
+					if (parametro.equals("ratio:auto")) Schermo.ratio = ((double)Toolkit.getDefaultToolkit().getScreenResolution())/100;
+					else Schermo.ratio = Double.parseDouble(parametro.replace("ratio:", ""));
+				}
+				else if (parametro.startsWith("lang:")) Strings.configMessages(parametro.replace("lang:", ""));
+			}
+		}
 		configuraUIManager();
 		new Main();
 	}
@@ -290,6 +306,8 @@ public class Main extends JFrame {
 
 	static void configuraUIManager() {
     	//UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		f = new Font("sans", Font.PLAIN, Schermo.d(18));
+		f2 = new Font("sans", Font.PLAIN, Schermo.d(16));
 		UIManager.put("Button.font", f2);
         UIManager.put("Button.background", sh1);
         UIManager.put("Button.foreground", Color.WHITE);
