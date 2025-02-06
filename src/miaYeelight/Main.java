@@ -1,314 +1,368 @@
 package miaYeelight;
 
-import java.io.*;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.awt.*;
+import miaYeelight.lang.Strings;
+import miaYeelight.net.Connessione;
+import miaYeelight.ux.pannelli.PannelloAnimazioni;
+import miaYeelight.ux.pannelli.PannelloConnessione;
+import miaYeelight.ux.pannelli.PannelloPrincipale;
+import miaYeelight.ux.schermo.Schermo;
+import miaYeelight.ux.schermo.TimerColoreSchermo;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.io.IOException;
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 
+import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
+import static miaYeelight.ux.schermo.TimerColoreSchermo.ALGORITMO_FOTO;
+import static miaYeelight.ux.schermo.TimerColoreSchermo.ALGORITMO_PUNTI;
 
-public class Main {
-	static Font f, f2;
-    static final Color sh1 = new Color(40,40,40,255),
-    		bg = new Color(0,0,0,255),
-    		trasparente = new Color(0,0,0,0);
-	final ImageIcon yee = caricaIcona();
+public class Main implements Serializable {
 
-	Color accentColor;
-	Timer aggiornatoreWinAccent, aggiornatoreSchermo;
-	Timer extList = new Timer();
-	int lkpX = 0, lkpY = 0;
+    @Serial
+    private static final long serialVersionUID = 1L;
 
-	JFrame frame;
-	JPanel rosso = new JPanel();
-	JLabel titolo;
-	PannelloConnessione pannelloConnessione;
-	PannelloPrincipale pannello;
-	PannelloAnimazioni pannelloAnimazioni;
-	String nomeLampadina;
+    public final Font f2;
+    private static final Color sh1 = new Color(40, 40, 40, 255);
+    public static final Color bg = new Color(0, 0, 0, 255);
+    public static final Color trasparente = new Color(0, 0, 0, 0);
+    public final ImageIcon yee;
 
-	Connessione connessione = null;
-	
-	
-	public static void main(String[] args) throws IOException {
-		/*Object[] keys = System.getenv().keySet().toArray();
-		for (int i=0; i<System.getenv().size(); i++) {
-			System.out.print(keys[i] + ": ");
-			System.out.println(System.getenv().get(keys[i]));
-		}*/
-		Strings.configMessages();
-		if (args != null) {
-			List<String> parametri = List.of(args);
-			for(String parametro : parametri) {
-				if (parametro.startsWith("ratio:")) {
-					if (parametro.equals("ratio:auto")) Schermo.ratio = ((double)Toolkit.getDefaultToolkit().getScreenResolution())/100;
-					else Schermo.ratio = Double.parseDouble(parametro.replace("ratio:", ""));
-				}
-				else if (parametro.startsWith("lang:")) Strings.configMessages(parametro.replace("lang:", ""));
-			}
-		}
-		configuraUIManager();
-		new Main();
-	}
+    private Color accentColor;
+    private transient Timer aggiornatoreWinAccent;
+    private transient Timer aggiornatoreSchermo;
+    private transient Timer extList = new Timer();
+    private int lkpX = 0;
+    private int lkpY = 0;
 
-	Main() throws IOException {
-		nomeLampadina = Strings.get("AppName");
-		frame = new JFrame();
-		frame.setUndecorated(true);
-		frame.setTitle(nomeLampadina);
-		frame.setResizable(false);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setIconImage(yee.getImage());
-		frame.setBackground(new Color(0,0,0,0));
-		creaBarraDelTitolo();
-		rosso.setBounds(0, 0, Schermo.d(530), Schermo.d(40));
-        frame.getContentPane().add(rosso,BorderLayout.NORTH);
+    private final JFrame frame;
+    private PannelloConnessione pannelloConnessione;
+    private final JPanel rosso = new JPanel();
+    private JLabel titolo;
+    private PannelloPrincipale pannello;
+    private PannelloAnimazioni pannelloAnimazioni;
+    private String nomeLampadina;
+    private int algoritmo = ALGORITMO_FOTO;
+
+    private Connessione connessione = null;
+
+    public static void main(String[] args) throws IOException {
+        new Main(args);
+    }
+
+    private Main(final String[] args) throws IOException {
+        applicaConfigurazioneLineaDiComando(args);
+        f2 = new Font("sans", Font.PLAIN, Schermo.d(16));
+        yee = caricaIcona();
+        configuraUIManager();
+
+        nomeLampadina = Strings.get("AppName");
+        frame = new JFrame();
+        frame.setUndecorated(true);
+        frame.setTitle(nomeLampadina);
+        frame.setResizable(false);
+        frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
+        frame.setIconImage(yee.getImage());
+        frame.setBackground(new Color(0, 0, 0, 0));
+        creaBarraDelTitolo();
+        rosso.setBounds(0, 0, Schermo.d(530), Schermo.d(40));
+        frame.getContentPane().add(rosso, BorderLayout.NORTH);
         frame.getContentPane().add(pannelloConnessione = new PannelloConnessione(this, true), BorderLayout.CENTER);
-        Dimension screenSize=Toolkit.getDefaultToolkit().getScreenSize();
-    	int screenW = (int)(screenSize.getWidth());
-    	int screenH = (int)(screenSize.getHeight());
-        frame.setBounds(screenW/2-265, screenH/2-pannelloConnessione.getHeight(), rosso.getWidth(), rosso.getHeight() + pannelloConnessione.getHeight());
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int screenW = (int) (screenSize.getWidth());
+        int screenH = (int) (screenSize.getHeight());
+        frame.setBounds(screenW / 2 - 265, screenH / 2 - pannelloConnessione.getHeight(), rosso.getWidth(), rosso.getHeight() + pannelloConnessione.getHeight());
 
         connessione = new Connessione(this);
         if (connessione.connetti(false)) {
-        	String[] proprieta = connessione.scaricaProprieta();
-        	tornaStatico();
-			configuraPannelloPrincipaleConStatoLampada(proprieta);
-			schedulaExtListener();
-			frame.setVisible(true);
-        } else JOptionPane.showMessageDialog(null, 
-        		Strings.get("Main.4") +
-				Strings.get("Main.5") +
-				Strings.get("Main.6") +
-				Strings.get("Main.7") +
-				Strings.get("Main.8") +
-				"</ul></HTML>", Strings.get("Main.10"), JOptionPane.ERROR_MESSAGE, yee);
-	}
+            String[] proprieta = connessione.scaricaProprieta();
+            tornaStatico();
+            configuraPannelloPrincipaleConStatoLampada(proprieta);
+            schedulaExtListener();
+            frame.setVisible(true);
+        } else {
+            JOptionPane.showMessageDialog(null, "%s%s%s%s%s</ul></HTML>".formatted(Strings.get("Main.4"), Strings.get("Main.5"), Strings.get("Main.6"), Strings.get("Main.7"), Strings.get("Main.8")), Strings.get("Main.10"), JOptionPane.ERROR_MESSAGE, yee);
+        }
+    }
 
-	void configuraPannelloPrincipaleConStatoLampada(String [] statoIniziale) {
-		if (statoIniziale[0].equals("code")) return;
-		pannello.modoDiretto = false;
-        if (statoIniziale[0].equals("on")) pannello.accendi.setText(Strings.get("PannelloPrincipale.12"));
-        pannello.luminosita.setValue(Integer.parseInt(statoIniziale[1]));
-        pannello.temperatura.setValue(Integer.parseInt(statoIniziale[5]));
-        pannello.hue.setValue(Integer.parseInt(statoIniziale[3]));
-        pannello.sat.setValue(Integer.parseInt(statoIniziale[4]));
+    private void applicaConfigurazioneLineaDiComando(final String[] args) {
+        boolean linguaNonImpostata = true;
+
+        if (args != null) {
+            for (String parametro : args) {
+                if (parametro.startsWith("ratio:")) {
+                    if (parametro.equals("ratio:auto")) {
+                        Schermo.setRatio(((double) Toolkit.getDefaultToolkit().getScreenResolution()) / 100);
+                    } else {
+                        Schermo.setRatio(Double.parseDouble(parametro.replace("ratio:", "")));
+                    }
+                } else if (parametro.startsWith("lang:")) {
+                    Strings.configMessages(parametro.replace("lang:", ""));
+                    linguaNonImpostata = false;
+                } else if (parametro.equals("algo:pnt")) {
+                    algoritmo = ALGORITMO_PUNTI;
+                }
+            }
+        }
+
+        if (linguaNonImpostata) {
+            Strings.configMessages();
+        }
+    }
+
+    public void configuraPannelloPrincipaleConStatoLampada(final String[] statoIniziale) {
+        if (statoIniziale[0].equals("code")) {
+            return;
+        }
+        pannello.setModoDiretto(false);
+        if (statoIniziale[0].equals("on")) {
+            pannello.getAccendi().setText(Strings.get("PannelloPrincipale.12"));
+        }
+        pannello.getLuminosita().setValue(Integer.parseInt(statoIniziale[1]));
+        pannello.getTemperatura().setValue(Integer.parseInt(statoIniziale[5]));
+        pannello.getHue().setValue(Integer.parseInt(statoIniziale[3]));
+        pannello.getSat().setValue(Integer.parseInt(statoIniziale[4]));
         nomeLampadina = statoIniziale[6];
         titolo.setText(nomeLampadina);
-        pannello.ultimaModalita = !statoIniziale[2].equals("2");
+        pannello.setUltimaModalita(!statoIniziale[2].equals("2"));
         pannello.aggiornaAnteprima();
-        pannello.modoDiretto = true;
-	}
+        pannello.setModoDiretto(true);
+    }
 
-
-	void tornaModalitaRicerca() {
-		terminaAggiornatoreWinAccent();
-		extList.cancel();
-		extList = new Timer();
-		connessione.chiudi();
-		connessione = new Connessione(this);
-		nomeLampadina = Strings.get("AppName");
-		frame.getContentPane().removeAll();
-		frame.getContentPane().add(rosso, BorderLayout.NORTH);
-		frame.getContentPane().add(pannelloConnessione = new PannelloConnessione(this, false), BorderLayout.CENTER);
+    private void tornaModalitaRicerca() {
+        terminaAggiornatoreWinAccent();
+        extList.cancel();
+        extList = new Timer();
+        connessione.chiudi();
+        connessione = new Connessione(this);
+        nomeLampadina = Strings.get("AppName");
+        frame.getContentPane().removeAll();
+        frame.getContentPane().add(rosso, BorderLayout.NORTH);
+        frame.getContentPane().add(pannelloConnessione = new PannelloConnessione(this, false), BorderLayout.CENTER);
         frame.setSize(rosso.getWidth(), rosso.getHeight() + pannelloConnessione.getHeight());
         frame.revalidate();
-	}
+    }
 
-	void apriPannelloAnimazioni() {
-		terminaAggiornatoreWinAccent();
-		terminaAggiornatoreColoreSchermo();
-		if (pannelloAnimazioni == null) pannelloAnimazioni = new PannelloAnimazioni(this);
-		frame.getContentPane().removeAll();
-		frame.getContentPane().add(rosso, BorderLayout.NORTH);
-		frame.getContentPane().add(pannelloAnimazioni, BorderLayout.CENTER);
-		frame.setSize(rosso.getWidth(), rosso.getHeight() + pannelloAnimazioni.getHeight());
-		frame.revalidate();
-	}
+    public void apriPannelloAnimazioni() {
+        terminaAggiornatoreWinAccent();
+        terminaAggiornatoreColoreSchermo();
+        if (pannelloAnimazioni == null) {
+            pannelloAnimazioni = new PannelloAnimazioni(this);
+        }
+        frame.getContentPane().removeAll();
+        frame.getContentPane().add(rosso, BorderLayout.NORTH);
+        frame.getContentPane().add(pannelloAnimazioni, BorderLayout.CENTER);
+        frame.setSize(rosso.getWidth(), rosso.getHeight() + pannelloAnimazioni.getHeight());
+        frame.revalidate();
+    }
 
-	void tornaStatico() {
-		if (pannello == null) {
-			pannello = new PannelloPrincipale(this);
-			pannello.setBounds(0, 0, pannello.getWidth(), pannello.getHeight());
-		}
-		frame.getContentPane().removeAll();
-		frame.getContentPane().add(rosso, BorderLayout.NORTH);
-		frame.getContentPane().add(pannello, BorderLayout.CENTER);
-		frame.setSize(rosso.getWidth(), rosso.getHeight() + pannello.getHeight());
-		frame.revalidate();
-	}
+    public void tornaStatico() {
+        if (pannello == null) {
+            pannello = new PannelloPrincipale(this);
+            pannello.setBounds(0, 0, pannello.getWidth(), pannello.getHeight());
+        }
+        frame.getContentPane().removeAll();
+        frame.getContentPane().add(rosso, BorderLayout.NORTH);
+        frame.getContentPane().add(pannello, BorderLayout.CENTER);
+        frame.setSize(rosso.getWidth(), rosso.getHeight() + pannello.getHeight());
+        frame.revalidate();
+    }
 
-	void creaBarraDelTitolo() {
-		titolo = new JLabel(nomeLampadina);
-		JButton disconnetti = new JButton("❌");
-		JLabel icona = new JLabel();
-		rosso.setLayout(null);
-        rosso.setBackground(new Color(160,0,0));
+    void creaBarraDelTitolo() {
+        titolo = new JLabel(nomeLampadina);
+        JButton disconnetti = new JButton("❌");
+        JLabel icona = new JLabel();
+        rosso.setLayout(null);
+        rosso.setBackground(new Color(160, 0, 0));
         titolo.setBounds(0, 0, Schermo.d(530), Schermo.d(40));
-        titolo.setHorizontalAlignment(SwingConstants.CENTER); titolo.setVerticalAlignment(SwingConstants.CENTER);
+        titolo.setHorizontalAlignment(SwingConstants.CENTER);
+        titolo.setVerticalAlignment(SwingConstants.CENTER);
         rosso.add(titolo);
         titolo.addMouseListener(new MouseListener() {
-			public void mouseClicked(MouseEvent click) {
-				if (click.getX() > Schermo.d(490)) disconnetti.doClick();
-				else if (click.getX() > Schermo.d(40)) {
-					String nome = JOptionPane.showInputDialog(Strings.get("Main.16"), nomeLampadina);
-					if (nome != null && nome != "") {
-						connessione.cambiaNome(nome);
-						nomeLampadina = nome;
-						titolo.setText(nomeLampadina);
-					}
-				}
-				else if (!Arrays.asList(frame.getContentPane().getComponents()).contains(pannelloConnessione)) tornaModalitaRicerca();
-			}
-			public void mouseEntered(MouseEvent click) {
-				if (click.getX() > Schermo.d(490)) disconnetti.setBackground(new Color(90,0,0));}
-			public void mouseExited(MouseEvent click) {
-				disconnetti.setBackground(new Color(120,0,0));
-				lkpX = 0; lkpY = 0;
-				titolo.setText(nomeLampadina);}
-			public void mousePressed(MouseEvent click) {
-				if (click.getX() > Schermo.d(490)) disconnetti.setBackground(new Color(60,0,0));}
-			public void mouseReleased(MouseEvent click) {
-				if (click.getX() > Schermo.d(490)) disconnetti.setBackground(new Color(120,0,0));
-				lkpX = 0; lkpY = 0;
-			}
+            public void mouseClicked(MouseEvent click) {
+                if (click.getX() > Schermo.d(490)) {
+                    disconnetti.doClick();
+                } else if (click.getX() > Schermo.d(40)) {
+                    String nome = JOptionPane.showInputDialog(Strings.get("Main.16"), nomeLampadina);
+                    if (nome != null && !nome.isEmpty()) {
+                        connessione.cambiaNome(nome);
+                        nomeLampadina = nome;
+                        titolo.setText(nomeLampadina);
+                    }
+                } else if (!Arrays.asList(frame.getContentPane().getComponents()).contains(pannelloConnessione)) {
+                    tornaModalitaRicerca();
+                }
+            }
+
+            public void mouseEntered(MouseEvent click) {
+                if (click.getX() > Schermo.d(490)) {
+                    disconnetti.setBackground(new Color(90, 0, 0));
+                }
+            }
+
+            public void mouseExited(MouseEvent click) {
+                disconnetti.setBackground(new Color(120, 0, 0));
+                lkpX = 0;
+                lkpY = 0;
+                titolo.setText(nomeLampadina);
+            }
+
+            public void mousePressed(MouseEvent click) {
+                if (click.getX() > Schermo.d(490)) {
+                    disconnetti.setBackground(new Color(60, 0, 0));
+                }
+            }
+
+            public void mouseReleased(MouseEvent click) {
+                if (click.getX() > Schermo.d(490)) {
+                    disconnetti.setBackground(new Color(120, 0, 0));
+                }
+                lkpX = 0;
+                lkpY = 0;
+            }
         });
+
         titolo.addMouseMotionListener(new MouseMotionListener() {
-        	public void mouseDragged(MouseEvent d) {
-        		if (d.getX() < Schermo.d(490)) {
-        			int nuovaX = d.getXOnScreen(), nuovaY = d.getYOnScreen();
-    				if (lkpX !=0 || lkpY!=0) {
-	        			int xInc = nuovaX-lkpX,
-	        				yInc = nuovaY-lkpY;
-	        			frame.setLocation(nuovaX-d.getX()+xInc, nuovaY-d.getY()+yInc);
-    				}
-    				lkpX = nuovaX; lkpY = nuovaY;
-    			}
-			}
-			public void mouseMoved(MouseEvent d) {
-				if (d.getX() > Schermo.d(490)) disconnetti.setBackground(new Color(90,0,0));
-				else disconnetti.setBackground(new Color(120,0,0));
-				if (d.getX() <= Schermo.d(40) && !Arrays.asList(frame.getContentPane().getComponents()).contains(pannelloConnessione)) titolo.setText(Strings.get("Main.18"));
-				else titolo.setText(nomeLampadina);
-			}
-		});
+            public void mouseDragged(MouseEvent d) {
+                if (d.getX() < Schermo.d(490)) {
+                    int nuovaX = d.getXOnScreen();
+                    int nuovaY = d.getYOnScreen();
+                    if (lkpX != 0 || lkpY != 0) {
+                        int xInc = nuovaX - lkpX;
+                        int yInc = nuovaY - lkpY;
+                        frame.setLocation(nuovaX - d.getX() + xInc, nuovaY - d.getY() + yInc);
+                    }
+                    lkpX = nuovaX;
+                    lkpY = nuovaY;
+                }
+            }
+
+            public void mouseMoved(MouseEvent d) {
+                if (d.getX() > Schermo.d(490)) {
+                    disconnetti.setBackground(new Color(90, 0, 0));
+                } else {
+                    disconnetti.setBackground(new Color(120, 0, 0));
+                }
+                if (d.getX() <= Schermo.d(40) && !Arrays.asList(frame.getContentPane().getComponents()).contains(pannelloConnessione)) {
+                    titolo.setText(Strings.get("Main.18"));
+                } else {
+                    titolo.setText(nomeLampadina);
+                }
+            }
+        });
 
         disconnetti.setBounds(Schermo.d(490), 0, Schermo.d(40), Schermo.d(40));
         disconnetti.addActionListener(click -> {
-        	connessione.chiudi();
-        	System.exit(0);
+            connessione.chiudi();
+            System.exit(0);
         });
         disconnetti.setFocusable(false);
-        disconnetti.setBackground(new Color(120,0,0));
+        disconnetti.setBackground(new Color(120, 0, 0));
         rosso.add(disconnetti);
         icona.setIcon(yee);
-        icona.setBounds(0,0,Schermo.d(40),Schermo.d(40));
+        icona.setBounds(0, 0, Schermo.d(40), Schermo.d(40));
         rosso.add(icona);
-        rosso.setPreferredSize(new Dimension(Schermo.d(530),Schermo.d(40)));
-	}
+        rosso.setPreferredSize(new Dimension(Schermo.d(530), Schermo.d(40)));
+    }
 
-	void schedulaExtListener() {
-		extList.schedule(new TimerTask() {
-			public void run() {
-				if (Arrays.asList(frame.getContentPane().getComponents()).contains(pannello) && (pannello.crovescia == null || !pannello.crovescia.isRunning()) && aggiornatoreSchermo == null) {
-					boolean modoPrima = pannello.modoDiretto;
-					pannello.modoDiretto = false;
-					configuraPannelloPrincipaleConStatoLampada(connessione.scaricaProprieta());
-					pannello.modoDiretto = modoPrima;
-				}
-			}
-		}, 2500, 2697);
-	}
+    public void schedulaExtListener() {
+        extList.schedule(new TimerTask() {
+            public void run() {
+                if (Arrays.asList(frame.getContentPane().getComponents()).contains(pannello) && (pannello.getCrovescia() == null || !pannello.getCrovescia().isRunning()) && aggiornatoreSchermo == null) {
+                    boolean modoPrima = pannello.getModoDiretto();
+                    pannello.setModoDiretto(false);
+                    configuraPannelloPrincipaleConStatoLampada(connessione.scaricaProprieta());
+                    pannello.setModoDiretto(modoPrima);
+                }
+            }
+        }, 2500, 2697);
+    }
 
-	void tienitiAggiornataSuWindows() {
-		if (aggiornatoreWinAccent == null && aggiornatoreSchermo == null) {
-			pannello.seguiSchermo.setEnabled(false);
-			pannello.seguiWinAccent.setText(Strings.get("Main.19"));
-			cambiaColoreDaAccent();
-			aggiornatoreWinAccent = new Timer();
-			aggiornatoreWinAccent.schedule(new TimerTask() {
-				public void run() {
-					if (accentColor.getRGB() != SystemColor.activeCaption.getRGB()) cambiaColoreDaAccent();
-				}
-			}, 0, 2000);
-		} else terminaAggiornatoreWinAccent();
-	}
+    public void tienitiAggiornataSuWindows() {
+        if (aggiornatoreWinAccent == null && aggiornatoreSchermo == null) {
+            pannello.getSeguiSchermo().setEnabled(false);
+            pannello.getSeguiWinAccent().setText(Strings.get("Main.19"));
+            cambiaColoreDaAccent();
+            aggiornatoreWinAccent = new Timer();
+            aggiornatoreWinAccent.schedule(new TimerTask() {
+                public void run() {
+                    if (accentColor.getRGB() != SystemColor.activeCaption.getRGB()) {
+                        cambiaColoreDaAccent();
+                    }
+                }
+            }, 0, 2000);
+        } else {
+            terminaAggiornatoreWinAccent();
+        }
+    }
 
-	void terminaAggiornatoreWinAccent() {
-		if (aggiornatoreWinAccent != null) {
-			pannello.seguiSchermo.setEnabled(true);
-			aggiornatoreWinAccent.cancel();
-			aggiornatoreWinAccent = null;
-			pannello.seguiWinAccent.setText(Strings.get("PannelloPrincipale.9"));
-		}
-	}
+    public void terminaAggiornatoreWinAccent() {
+        if (aggiornatoreWinAccent != null) {
+            pannello.getSeguiSchermo().setEnabled(true);
+            aggiornatoreWinAccent.cancel();
+            aggiornatoreWinAccent = null;
+            pannello.getSeguiWinAccent().setText(Strings.get("PannelloPrincipale.9"));
+        }
+    }
 
-	void cambiaColoreDaAccent() {
-		accentColor = new Color(SystemColor.activeCaption.getRed(), SystemColor.activeCaption.getGreen(), SystemColor.activeCaption.getBlue());
-    	float[] hsbVals = Color.RGBtoHSB(accentColor.getRed(), accentColor.getGreen(), accentColor.getBlue(), new float[3]);
-    	boolean modoPrima = pannello.modoDiretto;
-    	pannello.modoDiretto = false;
-    	pannello.hue.setValue((int)(hsbVals[0]*360));
-    	pannello.sat.setValue((int)(hsbVals[1]*70+30));
-    	pannello.luminosita.setValue((int)(hsbVals[2]*100));
-    	pannello.modoDiretto = modoPrima;
-    	connessione.setHS((int)(hsbVals[0]*360), (int)(hsbVals[1]*70+30));
-    	try {Thread.sleep(100);} catch (InterruptedException e) {}
-    	connessione.setBr((int)(hsbVals[2]*100));
-	}
-	
-	void seguiColoreSchermo() {
-		if (aggiornatoreWinAccent == null && aggiornatoreSchermo == null) {
-			pannello.abilitaControlli(false);
-			pannello.seguiSchermo.setText(Strings.get("Main.19"));
-			aggiornatoreSchermo = new Timer();
-			aggiornatoreSchermo.schedule(new TimerTask() {
-				int inviareComando = 0;
-				public void run() {
-					Color c = Schermo.ottieniMedia(inviareComando==2? 50 : 150, inviareComando==2? 0.25 : 0.4, 0.15);
-					float[] hsbVals = Color.RGBtoHSB(c.getRed(), c.getGreen(), c.getBlue(), new float[3]);
-			    	boolean modoPrima = pannello.modoDiretto;
-			    	pannello.modoDiretto = false;
-			    	pannello.hue.setValue((int)(hsbVals[0]*360));
-			    	pannello.sat.setValue((int)(hsbVals[1]*70+30));
-			    	pannello.modoDiretto = modoPrima;
-					if (inviareComando == 2) {
-						inviareComando = 0;
-				    	connessione.setHS((int)(hsbVals[0]*360), (int)(hsbVals[1]*70+30));
-					}
-					else inviareComando++;
-				}
-			}, 0, 340);
-		} else terminaAggiornatoreColoreSchermo();
-	}
-	
-	void terminaAggiornatoreColoreSchermo() {
-		if (aggiornatoreSchermo != null) {
-			pannello.abilitaControlli(true);
-			aggiornatoreSchermo.cancel();
-			aggiornatoreSchermo = null;
-			pannello.seguiSchermo.setText(Strings.get("PannelloPrincipale.10"));
-		}
-	}
+    public void cambiaColoreDaAccent() {
+        accentColor = new Color(SystemColor.activeCaption.getRed(), SystemColor.activeCaption.getGreen(), SystemColor.activeCaption.getBlue());
+        float[] hsbVals = Color.RGBtoHSB(accentColor.getRed(), accentColor.getGreen(), accentColor.getBlue(), new float[3]);
+        boolean modoPrima = pannello.getModoDiretto();
+        pannello.setModoDiretto(false);
+        pannello.getHue().setValue((int) (hsbVals[0] * 360));
+        pannello.getSat().setValue((int) (hsbVals[1] * 70 + 30));
+        pannello.getLuminosita().setValue((int) (hsbVals[2] * 100));
+        pannello.setModoDiretto(modoPrima);
+        connessione.setHS((int) (hsbVals[0] * 360), (int) (hsbVals[1] * 70 + 30));
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException ignored) {
+        }
+        connessione.setBr((int) (hsbVals[2] * 100));
+    }
 
+    public void seguiColoreSchermo() {
+        if (aggiornatoreWinAccent == null && aggiornatoreSchermo == null) {
+            pannello.abilitaControlli(false);
+            pannello.getSeguiSchermo().setText(Strings.get("Main.19"));
+            aggiornatoreSchermo = new Timer();
+            aggiornatoreSchermo.schedule(new TimerColoreSchermo(algoritmo, pannello, connessione), 0, 350);
+        } else {
+            terminaAggiornatoreColoreSchermo();
+        }
+    }
 
-	ImageIcon caricaIcona() {
-		try {
-			return new ImageIcon(ImageIO.read(Main.class.getResource("yee.png")).getScaledInstance(Schermo.d(40),Schermo.d(40),Image.SCALE_SMOOTH));
-		} catch (Exception e) {e.printStackTrace(); return null;}
-	}
+    public void terminaAggiornatoreColoreSchermo() {
+        if (aggiornatoreSchermo != null) {
+            pannello.abilitaControlli(true);
+            aggiornatoreSchermo.cancel();
+            aggiornatoreSchermo = null;
+            pannello.getSeguiSchermo().setText(Strings.get("PannelloPrincipale.10"));
+        }
+    }
 
-	static void configuraUIManager() {
-    	//UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		f = new Font("sans", Font.PLAIN, Schermo.d(18));
-		f2 = new Font("sans", Font.PLAIN, Schermo.d(16));
-		UIManager.put("Button.font", f2);
+    ImageIcon caricaIcona() {
+        try {
+            return new ImageIcon(ImageIO.read(Objects.requireNonNull(Main.class.getResource("yee.png"))).getScaledInstance(Schermo.d(40), Schermo.d(40), Image.SCALE_SMOOTH));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void configuraUIManager() {
+        final Font f = new Font("sans", Font.PLAIN, Schermo.d(18));
+
+        UIManager.put("Button.font", f2);
         UIManager.put("Button.background", sh1);
         UIManager.put("Button.foreground", Color.WHITE);
         UIManager.put("Button.select", sh1.brighter());
@@ -321,14 +375,27 @@ public class Main {
         UIManager.put("Label.foreground", Color.WHITE);
         UIManager.put("Panel.background", Color.black);
         UIManager.put("OptionPane.messageFont", f2);
-		UIManager.put("OptionPane.buttonFont", f2);
-		UIManager.put("OptionPane.background", Color.black);
-		UIManager.put("OptionPane.messageForeground", Color.WHITE);
-		UIManager.put("List.foreground", Color.WHITE);
-		UIManager.put("List.background", sh1);
-		UIManager.put("List.selectionBackground", sh1.brighter());
-		UIManager.put("List.selectionForeground", Color.WHITE);
-		UIManager.put("List.font", f2);
-		UIManager.put("ScrollBar.background", sh1.brighter().brighter());
+        UIManager.put("OptionPane.buttonFont", f2);
+        UIManager.put("OptionPane.background", Color.black);
+        UIManager.put("OptionPane.messageForeground", Color.WHITE);
+        UIManager.put("List.foreground", Color.WHITE);
+        UIManager.put("List.background", sh1);
+        UIManager.put("List.selectionBackground", sh1.brighter());
+        UIManager.put("List.selectionForeground", Color.WHITE);
+        UIManager.put("List.font", f2);
+        UIManager.put("ScrollBar.background", sh1.brighter().brighter());
     }
+
+    public JFrame getFrame() {
+        return frame;
+    }
+
+    public PannelloConnessione getPannelloConnessione() {
+        return pannelloConnessione;
+    }
+
+    public Connessione getConnessione() {
+        return connessione;
+    }
+
 }
