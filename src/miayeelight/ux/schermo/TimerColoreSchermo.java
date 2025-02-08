@@ -1,7 +1,7 @@
-package miaYeelight.ux.schermo;
+package miayeelight.ux.schermo;
 
-import miaYeelight.net.Connessione;
-import miaYeelight.ux.pannelli.PannelloPrincipale;
+import miayeelight.net.Connessione;
+import miayeelight.ux.pannelli.PannelloPrincipale;
 
 import java.awt.*;
 import java.util.TimerTask;
@@ -28,8 +28,8 @@ public class TimerColoreSchermo extends TimerTask {
         this.pannello = pannello;
         this.connessione = connessione;
         this.algoritmo = algoritmo;
-        passoMinimo = algoritmo == ALGORITMO_FOTO ? 5 : 0;
-        passoMassimo = algoritmo == ALGORITMO_FOTO ? 10 : 2;
+        passoMinimo = algoritmo == ALGORITMO_FOTO ? 6 : 0;
+        passoMassimo = algoritmo == ALGORITMO_FOTO ? 8 : 2;
         campione = passoMinimo;
     }
 

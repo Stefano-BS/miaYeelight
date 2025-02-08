@@ -1,15 +1,18 @@
-package miaYeelight.ux.pannelli;
+package miayeelight.ux.pannelli;
 
-import miaYeelight.Main;
-import miaYeelight.ux.componenti.Slider;
-import miaYeelight.ux.schermo.Schermo;
-import miaYeelight.lang.Strings;
+import miayeelight.Configurazione;
+import miayeelight.Main;
+import miayeelight.lang.Strings;
+import miayeelight.ux.componenti.Slider;
 
 import javax.swing.*;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.Serial;
+
+import static miayeelight.Main.log;
+import static miayeelight.ux.schermo.Schermo.d;
 
 public class PannelloPrincipale extends JPanel {
 
@@ -18,36 +21,50 @@ public class PannelloPrincipale extends JPanel {
 
     private final JButton seguiWinAccent;
     private final JButton seguiSchermo;
-    private final JButton accendi = new JButton(Strings.get("PannelloPrincipale.0"));
-    private final JButton winAccent = new JButton(Strings.get("PannelloPrincipale.4"));
+    private final JButton accendi = new JButton(Strings.get(PannelloPrincipale.class, "0"));
+    private final JButton winAccent = new JButton(Strings.get(PannelloPrincipale.class, "4"));
+    private final JButton animazioni = new JButton(Strings.get(PannelloPrincipale.class, "5"));
+    private final JButton timer = new JButton(Strings.get(PannelloPrincipale.class, "1"));
     private final JSlider luminosita = Slider.fab(Slider.PRESETLUM);
     private final JSlider hue = Slider.fab(Slider.PRESETTON);
     private final JSlider sat = Slider.fab(Slider.PRESETSAT);
     private final JSlider temperatura = Slider.fab(Slider.PRESETCT);
     private final JPanel anteprima = new JPanel();
+    private final JLabel descLuce;
+    private final JLabel descTemp;
+    private final JLabel descCol;
+    private final Main ref;
     private Timer crovescia = null;
     private boolean modoDiretto = true;
     private boolean ultimaModalita = false; // false: T, true: C
+    private boolean win10AccentDisegnati;
 
     public PannelloPrincipale(Main ref) {
         setLayout(null);
         setBackground(Main.bg);
-        JLabel descLuce = new JLabel(Strings.get("PannelloPrincipale.16"));
-        JLabel descTemp = new JLabel(Strings.get("PannelloPrincipale.18"));
-        JLabel descCol = new JLabel(Strings.get("PannelloPrincipale.8"));
-        seguiWinAccent = new JButton(Strings.get("PannelloPrincipale.9"));
-        seguiSchermo = new JButton(Strings.get("PannelloPrincipale.10"));
+        this.ref = ref;
 
-        int Y = Schermo.d(10);
-        accendi.setBounds(Schermo.d(10), Y, Schermo.d(250), Schermo.d(40));
-        final JButton timer = new JButton(Strings.get("PannelloPrincipale.1"));
-        timer.setBounds(Schermo.d(270), Y, Schermo.d(250), Schermo.d(40));
+        descLuce = new JLabel(Strings.get(PannelloPrincipale.class, "16"));
+        descTemp = new JLabel(Strings.get(PannelloPrincipale.class, "18"));
+        descCol = new JLabel(Strings.get(PannelloPrincipale.class, "8"));
+        seguiWinAccent = new JButton(Strings.get(PannelloPrincipale.class, "9"));
+        seguiSchermo = new JButton(Strings.get(PannelloPrincipale.class, "10"));
+
+        int Y = d(10);
+        accendi.setBounds(d(10), Y, d(225), d(40));
+
+        final JButton impostazioni = new JButton("🔨");
+        impostazioni.setBounds(d(245), Y, d(40), d(40));
+        impostazioni.addActionListener(click -> ref.apriPannelloImpostazioni());
+
+        timer.setBounds(d(295), Y, d(225), d(40));
+
         accendi.addActionListener(click -> {
-            if (accendi.getText().equals(Strings.get("PannelloPrincipale.0"))) {
-                accendi.setText(Strings.get("PannelloPrincipale.12"));
+            if (accendi.getText().equals(Strings.get(PannelloPrincipale.class, "0"))) {
+                accendi.setText(Strings.get(PannelloPrincipale.class, "12"));
                 ref.getConnessione().accendi();
             } else {
-                accendi.setText(Strings.get("PannelloPrincipale.0"));
+                accendi.setText(Strings.get(PannelloPrincipale.class, "0"));
                 ref.getConnessione().spegni();
             }
         });
@@ -66,43 +83,55 @@ public class PannelloPrincipale extends JPanel {
         }
         timer.addActionListener(click -> {
             try {
-                int tempo = (Integer) JOptionPane.showInputDialog(ref.getFrame(), Strings.get("PannelloPrincipale.14"), Strings.get("PannelloPrincipale.15"), JOptionPane.QUESTION_MESSAGE, ref.yee, listaTimer, 1);
+                int tempo = (Integer) JOptionPane.showInputDialog(ref.getFrame(), Strings.get(PannelloPrincipale.class, "14"), Strings.get(PannelloPrincipale.class, "15"), JOptionPane.QUESTION_MESSAGE, ref.yee, listaTimer, 1);
                 ref.getConnessione().timer(tempo);
-            } catch (Exception ignored) {
-                //
+            } catch (Exception e) {
+                log(e);
             }
         });
 
         accendi.setFocusable(false);
         timer.setFocusable(false);
+        impostazioni.setFocusable(false);
+
         add(accendi);
         add(timer);
-        Y += Schermo.d(50);
-        seguiSchermo.setBounds(Schermo.d(10), Y, Schermo.d(510), Schermo.d(40));
-        seguiSchermo.addActionListener(click -> ref.seguiColoreSchermo());
-        seguiSchermo.setFocusable(false);
-        add(seguiSchermo);
-        Y += Schermo.d(50);
-        winAccent.setBounds(Schermo.d(10), Y, Schermo.d(250), Schermo.d(40));
-        seguiWinAccent.setBounds(Schermo.d(270), Y, Schermo.d(250), Schermo.d(40));
+        add(impostazioni);
+        Y += d(50);
+
+        win10AccentDisegnati = Configurazione.getMostraWin10();
+        winAccent.setBounds(d(10), Y, d(250), d(40));
+        seguiWinAccent.setBounds(d(270), Y, d(250), d(40));
         winAccent.setFocusable(false);
         seguiWinAccent.setFocusable(false);
         winAccent.addActionListener(click -> ref.cambiaColoreDaAccent());
         seguiWinAccent.addActionListener(click -> ref.tienitiAggiornataSuWindows());
         add(winAccent);
         add(seguiWinAccent);
-        Y += Schermo.d(50);
-        final JButton animazioni = new JButton(Strings.get("PannelloPrincipale.5"));
-        animazioni.setBounds(Schermo.d(10), Y, Schermo.d(510), Schermo.d(40));
+
+        if (win10AccentDisegnati) {
+            Y += d(50);
+        } else {
+            winAccent.setVisible(false);
+            seguiWinAccent.setVisible(false);
+        }
+
+        seguiSchermo.setBounds(d(10), Y, d(250), d(40));
+        seguiSchermo.addActionListener(click -> ref.seguiColoreSchermo());
+        seguiSchermo.setFocusable(false);
+        add(seguiSchermo);
+
+        animazioni.setBounds(d(270), Y, d(250), d(40));
         animazioni.setFocusable(false);
         animazioni.addActionListener(click -> ref.apriPannelloAnimazioni());
         add(animazioni);
-        Y += Schermo.d(70);
-        descLuce.setBounds(Schermo.d(10), Y, Schermo.d(510), Schermo.d(40));
+        Y += d(70);
+
+        descLuce.setBounds(d(10), Y, d(510), d(40));
         descLuce.setOpaque(false);
         add(descLuce);
-        Y += Schermo.d(40);
-        luminosita.setBounds(Schermo.d(10), Y, Schermo.d(510), Schermo.d(40));
+        Y += d(40);
+        luminosita.setBounds(d(10), Y, d(510), d(40));
         luminosita.setBackground(Main.trasparente);
         luminosita.setForeground(Color.WHITE);
         luminosita.setMaximum(100);
@@ -110,17 +139,17 @@ public class PannelloPrincipale extends JPanel {
         luminosita.setMajorTickSpacing(10);
         luminosita.setMinorTickSpacing(5);
         luminosita.setPaintTicks(true);
-        luminosita.addChangeListener(s -> descLuce.setText(Strings.get("PannelloPrincipale.16") + luminosita.getValue() + "%"));
+        luminosita.addChangeListener(s -> descLuce.setText(Strings.get(PannelloPrincipale.class, "16") + luminosita.getValue() + "%"));
         luminosita.addChangeListener(s -> aggiornaAnteprima());
         luminosita.addChangeListener(s -> aggiornaAnteprima());
         luminosita.addChangeListener(eventoJSlider(e -> ref.getConnessione().setBr(Math.max(luminosita.getValue(), 1))));
         luminosita.setOpaque(false);
         add(luminosita);
-        Y += Schermo.d(40);
-        descTemp.setBounds(Schermo.d(10), Y, Schermo.d(510), Schermo.d(40));
+        Y += d(40);
+        descTemp.setBounds(d(10), Y, d(510), d(40));
         add(descTemp);
-        Y += Schermo.d(40);
-        temperatura.setBounds(Schermo.d(10), Y, Schermo.d(510), Schermo.d(40));
+        Y += d(40);
+        temperatura.setBounds(d(10), Y, d(510), d(40));
         temperatura.setBackground(Main.trasparente);
         temperatura.setForeground(Color.WHITE);
         temperatura.setOpaque(false);
@@ -130,17 +159,17 @@ public class PannelloPrincipale extends JPanel {
         temperatura.setSnapToTicks(true);
         temperatura.setMinorTickSpacing(100);
         temperatura.setPaintTicks(true);
-        temperatura.addChangeListener(s -> descTemp.setText(Strings.get("PannelloPrincipale.18") + temperatura.getValue() + "K"));
+        temperatura.addChangeListener(s -> descTemp.setText(Strings.get(PannelloPrincipale.class, "18") + temperatura.getValue() + "K"));
         temperatura.addChangeListener(s -> ultimaModalita = false);
         temperatura.addChangeListener(s -> aggiornaAnteprima());
         temperatura.addChangeListener(eventoJSlider(e -> ref.getConnessione().temperatura(temperatura.getValue())));
         add(temperatura);
-        Y += Schermo.d(40);
-        descCol.setBounds(Schermo.d(10), Y, Schermo.d(510), Schermo.d(40));
+        Y += d(40);
+        descCol.setBounds(d(10), Y, d(510), d(40));
         add(descCol);
-        Y += Schermo.d(40);
-        hue.setBounds(Schermo.d(10), Y, Schermo.d(250), Schermo.d(40));
-        sat.setBounds(Schermo.d(270), Y, Schermo.d(250), Schermo.d(40));
+        Y += d(40);
+        hue.setBounds(d(10), Y, d(250), d(40));
+        sat.setBounds(d(270), Y, d(250), d(40));
         hue.setBackground(Main.trasparente);
         hue.setForeground(Color.WHITE);
         sat.setBackground(Main.trasparente);
@@ -159,12 +188,13 @@ public class PannelloPrincipale extends JPanel {
         sat.addChangeListener(s -> aggiornaAnteprima());
         hue.addChangeListener(eventoJSlider(e -> ref.getConnessione().setHS(hue.getValue(), sat.getValue())));
         sat.addChangeListener(eventoJSlider(e -> ref.getConnessione().setHS(hue.getValue(), sat.getValue())));
-        Y += Schermo.d(50);
-        anteprima.setBounds(Schermo.d(10), Y, Schermo.d(510), Schermo.d(20));
+        Y += d(50);
+        anteprima.setBounds(d(10), Y, d(510), d(20));
         anteprima.setFocusable(false);
+        aggiornaAnteprima();
         add(anteprima);
-        Y += Schermo.d(30);
-        setSize(Schermo.d(530), Y);
+        Y += d(30);
+        setSize(d(530), Y);
         setVisible(true);
     }
 
@@ -201,6 +231,51 @@ public class PannelloPrincipale extends JPanel {
         sat.setEnabled(abilita);
         temperatura.setEnabled(abilita);
         winAccent.setEnabled(abilita);
+    }
+
+    public void riscriviEtichette() {
+        descLuce.setText(Strings.get(PannelloPrincipale.class, "16") + luminosita.getValue() + "%");
+        descTemp.setText(Strings.get(PannelloPrincipale.class, "18") + temperatura.getValue() + "K");
+        descCol.setText(Strings.get(PannelloPrincipale.class, "8"));
+        accendi.setText(accendi.getText().contains("\uD83D\uDCA1") ? Strings.get(PannelloPrincipale.class, "0") : Strings.get(PannelloPrincipale.class, "12"));
+        winAccent.setText(Strings.get(PannelloPrincipale.class, "4"));
+        seguiWinAccent.setText(Strings.get(PannelloPrincipale.class, "9"));
+        seguiSchermo.setText(Strings.get(PannelloPrincipale.class, "10"));
+        animazioni.setText(Strings.get(PannelloPrincipale.class, "5"));
+        timer.setText(Strings.get(PannelloPrincipale.class, "1"));
+    }
+
+    public void mostraWin10Accent(boolean mostraWin10) {
+        if (!win10AccentDisegnati && mostraWin10) {
+            movimentaComponenti(false);
+        }
+
+        if (win10AccentDisegnati && !mostraWin10) {
+            movimentaComponenti(true);
+        }
+
+        win10AccentDisegnati = mostraWin10;
+    }
+
+    private void movimentaComponenti(final boolean sopra) {
+        final int spostamento = sopra ? -d(50) : +d(50);
+        for (final Component c : getComponents()) {
+            if (c.equals(winAccent) || c.equals(seguiWinAccent)) {
+                continue;
+            }
+
+            final Rectangle dimensioni = c.getBounds();
+            if (dimensioni.getY() > d(10)) {
+                c.setBounds(new Rectangle((int) dimensioni.getX(), (int) (dimensioni.getY() + spostamento), (int) dimensioni.getWidth(), (int) dimensioni.getHeight()));
+            }
+        }
+
+        winAccent.setVisible(!sopra);
+        seguiWinAccent.setVisible(!sopra);
+
+        final Rectangle dimensioniPannello = getBounds();
+        setBounds(new Rectangle(0, 0, (int) dimensioniPannello.getWidth(), (int) dimensioniPannello.getHeight() + spostamento));
+        ref.getFrame().revalidate();
     }
 
     public boolean getModoDiretto() {

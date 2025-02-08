@@ -1,8 +1,9 @@
-package miaYeelight.lang;
+package miayeelight.lang;
 
-import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+
+import static miayeelight.Main.log;
 
 public class Strings {
 
@@ -11,20 +12,18 @@ public class Strings {
     private Strings() {
     }
 
-    public static void configMessages() {
-        configMessages(Locale.getDefault().getLanguage());
-    }
-
     public static void configMessages(String lang) {
         String pacchettoLingua = switch (lang) {
             case "it" -> ".ita";
             case "pt" -> ".ptg";
             case "es" -> ".esp";
+            case "fr" -> ".fra";
             default -> ".eng";
         };
         try {
-            resourceBundle = ResourceBundle.getBundle("miaYeelight.lang" + pacchettoLingua);
+            resourceBundle = ResourceBundle.getBundle("miayeelight.lang" + pacchettoLingua);
         } catch (MissingResourceException e) {
+            log(e);
             resourceBundle = null;
         }
     }
@@ -35,6 +34,10 @@ public class Strings {
         } catch (Exception e) {
             return '!' + key + '!';
         }
+    }
+
+    public static String get(final Class<?> classe, String key) {
+        return get("%s.%s".formatted(classe.getSimpleName(), key));
     }
 
 }

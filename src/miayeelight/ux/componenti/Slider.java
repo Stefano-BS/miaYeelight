@@ -1,6 +1,4 @@
-package miaYeelight.ux.componenti;
-
-import miaYeelight.ux.schermo.Schermo;
+package miayeelight.ux.componenti;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicSliderUI;
@@ -9,13 +7,14 @@ import java.awt.geom.RoundRectangle2D;
 import java.io.Serial;
 
 import static javax.swing.SwingConstants.HORIZONTAL;
+import static miayeelight.ux.schermo.Schermo.d;
 
 public class Slider extends BasicSliderUI {
 
-    private static final int TRACK_HEIGHT = Schermo.d(8);
-    private static final int TRACK_WIDTH = Schermo.d(8);
-    private static final int TRACK_ARC = Schermo.d(8);
-    private static final Dimension THUMB_SIZE = new Dimension(Schermo.d(5), Schermo.d(20));
+    private static final int TRACK_HEIGHT = d(8);
+    private static final int TRACK_WIDTH = d(8);
+    private static final int TRACK_ARC = d(8);
+    private static final Dimension THUMB_SIZE = new Dimension(d(5), d(20));
     private final RoundRectangle2D.Float trackShape = new RoundRectangle2D.Float();
 
     private static final Color cManopolaDefault = Color.red.darker();
@@ -149,14 +148,14 @@ public class Slider extends BasicSliderUI {
         } else {
             g.setColor(coloreTema().brighter());
         }
-        g.fillRoundRect(thumbRect.x, thumbRect.y, thumbRect.width, thumbRect.height, Schermo.d(5), Schermo.d(5));
+        g.fillRoundRect(thumbRect.x, thumbRect.y, thumbRect.width, thumbRect.height, d(5), d(5));
     }
 
     private Color coloreTema() {
         if (preset == PRESETDEFAULT) {
             return (cBarraSx);
         }
-        double p = (double) thumbRect.x / trackRect.width;
+        double p = Math.min((double) thumbRect.x / trackRect.width, 1.0);
         if (preset == PRESETCT) {
             return new Color(100 + (int) (100 * (1 - p)), 100 + (int) (60 * p), 50 + (int) (100 * p));
         }

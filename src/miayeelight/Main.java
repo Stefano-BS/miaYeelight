@@ -1,12 +1,12 @@
-package miaYeelight;
+package miayeelight;
 
-import miaYeelight.lang.Strings;
-import miaYeelight.net.Connessione;
-import miaYeelight.ux.pannelli.PannelloAnimazioni;
-import miaYeelight.ux.pannelli.PannelloConnessione;
-import miaYeelight.ux.pannelli.PannelloPrincipale;
-import miaYeelight.ux.schermo.Schermo;
-import miaYeelight.ux.schermo.TimerColoreSchermo;
+import miayeelight.lang.Strings;
+import miayeelight.net.Connessione;
+import miayeelight.ux.pannelli.PannelloAnimazioni;
+import miayeelight.ux.pannelli.PannelloConnessione;
+import miayeelight.ux.pannelli.PannelloImpostazioni;
+import miayeelight.ux.pannelli.PannelloPrincipale;
+import miayeelight.ux.schermo.TimerColoreSchermo;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -23,8 +23,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
-import static miaYeelight.ux.schermo.TimerColoreSchermo.ALGORITMO_FOTO;
-import static miaYeelight.ux.schermo.TimerColoreSchermo.ALGORITMO_PUNTI;
+import static miayeelight.ux.schermo.Schermo.d;
 
 public class Main implements Serializable {
 
@@ -45,13 +44,12 @@ public class Main implements Serializable {
     private int lkpY = 0;
 
     private final JFrame frame;
-    private PannelloConnessione pannelloConnessione;
     private final JPanel rosso = new JPanel();
+    private PannelloConnessione pannelloConnessione;
     private JLabel titolo;
     private PannelloPrincipale pannello;
     private PannelloAnimazioni pannelloAnimazioni;
     private String nomeLampadina;
-    private int algoritmo = ALGORITMO_FOTO;
 
     private Connessione connessione = null;
 
@@ -60,8 +58,10 @@ public class Main implements Serializable {
     }
 
     private Main(final String[] args) throws IOException {
-        applicaConfigurazioneLineaDiComando(args);
-        f2 = new Font("sans", Font.PLAIN, Schermo.d(16));
+        Configurazione.applicaConfigurazione(args);
+        Strings.configMessages(Configurazione.get("lang"));
+
+        f2 = new Font("sans", Font.PLAIN, d(16));
         yee = caricaIcona();
         configuraUIManager();
 
@@ -74,58 +74,37 @@ public class Main implements Serializable {
         frame.setIconImage(yee.getImage());
         frame.setBackground(new Color(0, 0, 0, 0));
         creaBarraDelTitolo();
-        rosso.setBounds(0, 0, Schermo.d(530), Schermo.d(40));
+        rosso.setBounds(0, 0, d(530), d(40));
         frame.getContentPane().add(rosso, BorderLayout.NORTH);
-        frame.getContentPane().add(pannelloConnessione = new PannelloConnessione(this, true), BorderLayout.CENTER);
+        pannelloConnessione = new PannelloConnessione(this, true);
+        frame.getContentPane().add(pannelloConnessione, BorderLayout.CENTER);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int screenW = (int) (screenSize.getWidth());
         int screenH = (int) (screenSize.getHeight());
         frame.setBounds(screenW / 2 - 265, screenH / 2 - pannelloConnessione.getHeight(), rosso.getWidth(), rosso.getHeight() + pannelloConnessione.getHeight());
 
         connessione = new Connessione(this);
-        if (connessione.connetti(false)) {
+        if (connessione.connetti()) {
             String[] proprieta = connessione.scaricaProprieta();
             tornaStatico();
             configuraPannelloPrincipaleConStatoLampada(proprieta);
             schedulaExtListener();
             frame.setVisible(true);
         } else {
-            JOptionPane.showMessageDialog(null, "%s%s%s%s%s</ul></HTML>".formatted(Strings.get("Main.4"), Strings.get("Main.5"), Strings.get("Main.6"), Strings.get("Main.7"), Strings.get("Main.8")), Strings.get("Main.10"), JOptionPane.ERROR_MESSAGE, yee);
-        }
-    }
-
-    private void applicaConfigurazioneLineaDiComando(final String[] args) {
-        boolean linguaNonImpostata = true;
-
-        if (args != null) {
-            for (String parametro : args) {
-                if (parametro.startsWith("ratio:")) {
-                    if (parametro.equals("ratio:auto")) {
-                        Schermo.setRatio(((double) Toolkit.getDefaultToolkit().getScreenResolution()) / 100);
-                    } else {
-                        Schermo.setRatio(Double.parseDouble(parametro.replace("ratio:", "")));
-                    }
-                } else if (parametro.startsWith("lang:")) {
-                    Strings.configMessages(parametro.replace("lang:", ""));
-                    linguaNonImpostata = false;
-                } else if (parametro.equals("algo:pnt")) {
-                    algoritmo = ALGORITMO_PUNTI;
-                }
-            }
-        }
-
-        if (linguaNonImpostata) {
-            Strings.configMessages();
+            JOptionPane.showMessageDialog(null, "%s%s%s%s%s</ul></HTML>".formatted(Strings.get(Main.class, "4"), Strings.get(Main.class, "5"), Strings.get(Main.class, "6"), Strings.get(Main.class, "7"), Strings.get(Main.class, "8")), Strings.get(Main.class, "10"), JOptionPane.ERROR_MESSAGE, yee);
         }
     }
 
     public void configuraPannelloPrincipaleConStatoLampada(final String[] statoIniziale) {
+        if (statoIniziale == null) {
+            return;
+        }
         if (statoIniziale[0].equals("code")) {
             return;
         }
         pannello.setModoDiretto(false);
         if (statoIniziale[0].equals("on")) {
-            pannello.getAccendi().setText(Strings.get("PannelloPrincipale.12"));
+            pannello.getAccendi().setText(Strings.get(PannelloPrincipale.class, "12"));
         }
         pannello.getLuminosita().setValue(Integer.parseInt(statoIniziale[1]));
         pannello.getTemperatura().setValue(Integer.parseInt(statoIniziale[5]));
@@ -145,11 +124,12 @@ public class Main implements Serializable {
         connessione.chiudi();
         connessione = new Connessione(this);
         nomeLampadina = Strings.get("AppName");
+        pannelloConnessione = new PannelloConnessione(this, false);
+
         frame.getContentPane().removeAll();
         frame.getContentPane().add(rosso, BorderLayout.NORTH);
-        frame.getContentPane().add(pannelloConnessione = new PannelloConnessione(this, false), BorderLayout.CENTER);
+        frame.getContentPane().add(pannelloConnessione, BorderLayout.CENTER);
         frame.setSize(rosso.getWidth(), rosso.getHeight() + pannelloConnessione.getHeight());
-        frame.revalidate();
     }
 
     public void apriPannelloAnimazioni() {
@@ -162,19 +142,29 @@ public class Main implements Serializable {
         frame.getContentPane().add(rosso, BorderLayout.NORTH);
         frame.getContentPane().add(pannelloAnimazioni, BorderLayout.CENTER);
         frame.setSize(rosso.getWidth(), rosso.getHeight() + pannelloAnimazioni.getHeight());
-        frame.revalidate();
+    }
+
+    public void apriPannelloImpostazioni() {
+        PannelloImpostazioni pannelloImpostazioni;
+        pannelloImpostazioni = new PannelloImpostazioni(this);
+        frame.getContentPane().removeAll();
+        frame.getContentPane().add(rosso, BorderLayout.NORTH);
+        frame.getContentPane().add(pannelloImpostazioni, BorderLayout.CENTER);
+        frame.setSize(rosso.getWidth(), rosso.getHeight() + pannelloImpostazioni.getHeight());
     }
 
     public void tornaStatico() {
         if (pannello == null) {
             pannello = new PannelloPrincipale(this);
             pannello.setBounds(0, 0, pannello.getWidth(), pannello.getHeight());
+        } else {
+            pannello.riscriviEtichette();
+            pannello.mostraWin10Accent(Configurazione.getMostraWin10());
         }
         frame.getContentPane().removeAll();
         frame.getContentPane().add(rosso, BorderLayout.NORTH);
         frame.getContentPane().add(pannello, BorderLayout.CENTER);
         frame.setSize(rosso.getWidth(), rosso.getHeight() + pannello.getHeight());
-        frame.revalidate();
     }
 
     void creaBarraDelTitolo() {
@@ -183,16 +173,16 @@ public class Main implements Serializable {
         JLabel icona = new JLabel();
         rosso.setLayout(null);
         rosso.setBackground(new Color(160, 0, 0));
-        titolo.setBounds(0, 0, Schermo.d(530), Schermo.d(40));
+        titolo.setBounds(0, 0, d(530), d(40));
         titolo.setHorizontalAlignment(SwingConstants.CENTER);
         titolo.setVerticalAlignment(SwingConstants.CENTER);
         rosso.add(titolo);
         titolo.addMouseListener(new MouseListener() {
             public void mouseClicked(MouseEvent click) {
-                if (click.getX() > Schermo.d(490)) {
+                if (click.getX() > d(490)) {
                     disconnetti.doClick();
-                } else if (click.getX() > Schermo.d(40)) {
-                    String nome = JOptionPane.showInputDialog(Strings.get("Main.16"), nomeLampadina);
+                } else if (click.getX() > d(40)) {
+                    String nome = JOptionPane.showInputDialog(Strings.get(Main.class, "16"), nomeLampadina);
                     if (nome != null && !nome.isEmpty()) {
                         connessione.cambiaNome(nome);
                         nomeLampadina = nome;
@@ -204,7 +194,7 @@ public class Main implements Serializable {
             }
 
             public void mouseEntered(MouseEvent click) {
-                if (click.getX() > Schermo.d(490)) {
+                if (click.getX() > d(490)) {
                     disconnetti.setBackground(new Color(90, 0, 0));
                 }
             }
@@ -217,13 +207,13 @@ public class Main implements Serializable {
             }
 
             public void mousePressed(MouseEvent click) {
-                if (click.getX() > Schermo.d(490)) {
+                if (click.getX() > d(490)) {
                     disconnetti.setBackground(new Color(60, 0, 0));
                 }
             }
 
             public void mouseReleased(MouseEvent click) {
-                if (click.getX() > Schermo.d(490)) {
+                if (click.getX() > d(490)) {
                     disconnetti.setBackground(new Color(120, 0, 0));
                 }
                 lkpX = 0;
@@ -233,7 +223,7 @@ public class Main implements Serializable {
 
         titolo.addMouseMotionListener(new MouseMotionListener() {
             public void mouseDragged(MouseEvent d) {
-                if (d.getX() < Schermo.d(490)) {
+                if (d.getX() < d(490)) {
                     int nuovaX = d.getXOnScreen();
                     int nuovaY = d.getYOnScreen();
                     if (lkpX != 0 || lkpY != 0) {
@@ -247,20 +237,20 @@ public class Main implements Serializable {
             }
 
             public void mouseMoved(MouseEvent d) {
-                if (d.getX() > Schermo.d(490)) {
+                if (d.getX() > d(490)) {
                     disconnetti.setBackground(new Color(90, 0, 0));
                 } else {
                     disconnetti.setBackground(new Color(120, 0, 0));
                 }
-                if (d.getX() <= Schermo.d(40) && !Arrays.asList(frame.getContentPane().getComponents()).contains(pannelloConnessione)) {
-                    titolo.setText(Strings.get("Main.18"));
+                if (d.getX() <= d(40) && !Arrays.asList(frame.getContentPane().getComponents()).contains(pannelloConnessione)) {
+                    titolo.setText(Strings.get(Main.class, "18"));
                 } else {
                     titolo.setText(nomeLampadina);
                 }
             }
         });
 
-        disconnetti.setBounds(Schermo.d(490), 0, Schermo.d(40), Schermo.d(40));
+        disconnetti.setBounds(d(490), 0, d(40), d(40));
         disconnetti.addActionListener(click -> {
             connessione.chiudi();
             System.exit(0);
@@ -269,9 +259,9 @@ public class Main implements Serializable {
         disconnetti.setBackground(new Color(120, 0, 0));
         rosso.add(disconnetti);
         icona.setIcon(yee);
-        icona.setBounds(0, 0, Schermo.d(40), Schermo.d(40));
+        icona.setBounds(0, 0, d(40), d(40));
         rosso.add(icona);
-        rosso.setPreferredSize(new Dimension(Schermo.d(530), Schermo.d(40)));
+        rosso.setPreferredSize(new Dimension(d(530), d(40)));
     }
 
     public void schedulaExtListener() {
@@ -290,7 +280,7 @@ public class Main implements Serializable {
     public void tienitiAggiornataSuWindows() {
         if (aggiornatoreWinAccent == null && aggiornatoreSchermo == null) {
             pannello.getSeguiSchermo().setEnabled(false);
-            pannello.getSeguiWinAccent().setText(Strings.get("Main.19"));
+            pannello.getSeguiWinAccent().setText(Strings.get(Main.class, "19"));
             cambiaColoreDaAccent();
             aggiornatoreWinAccent = new Timer();
             aggiornatoreWinAccent.schedule(new TimerTask() {
@@ -310,7 +300,7 @@ public class Main implements Serializable {
             pannello.getSeguiSchermo().setEnabled(true);
             aggiornatoreWinAccent.cancel();
             aggiornatoreWinAccent = null;
-            pannello.getSeguiWinAccent().setText(Strings.get("PannelloPrincipale.9"));
+            pannello.getSeguiWinAccent().setText(Strings.get(PannelloPrincipale.class, "9"));
         }
     }
 
@@ -326,7 +316,8 @@ public class Main implements Serializable {
         connessione.setHS((int) (hsbVals[0] * 360), (int) (hsbVals[1] * 70 + 30));
         try {
             Thread.sleep(100);
-        } catch (InterruptedException ignored) {
+        } catch (InterruptedException e) {
+            log(e);
         }
         connessione.setBr((int) (hsbVals[2] * 100));
     }
@@ -334,9 +325,9 @@ public class Main implements Serializable {
     public void seguiColoreSchermo() {
         if (aggiornatoreWinAccent == null && aggiornatoreSchermo == null) {
             pannello.abilitaControlli(false);
-            pannello.getSeguiSchermo().setText(Strings.get("Main.19"));
+            pannello.getSeguiSchermo().setText(Strings.get(Main.class, "19"));
             aggiornatoreSchermo = new Timer();
-            aggiornatoreSchermo.schedule(new TimerColoreSchermo(algoritmo, pannello, connessione), 0, 350);
+            aggiornatoreSchermo.schedule(new TimerColoreSchermo(Configurazione.getAlgoritmo(), pannello, connessione), 0, Configurazione.getIntervalloTimer());
         } else {
             terminaAggiornatoreColoreSchermo();
         }
@@ -347,20 +338,29 @@ public class Main implements Serializable {
             pannello.abilitaControlli(true);
             aggiornatoreSchermo.cancel();
             aggiornatoreSchermo = null;
-            pannello.getSeguiSchermo().setText(Strings.get("PannelloPrincipale.10"));
+            pannello.getSeguiSchermo().setText(Strings.get(PannelloPrincipale.class, "10"));
         }
     }
 
     ImageIcon caricaIcona() {
         try {
-            return new ImageIcon(ImageIO.read(Objects.requireNonNull(Main.class.getResource("yee.png"))).getScaledInstance(Schermo.d(40), Schermo.d(40), Image.SCALE_SMOOTH));
+            return new ImageIcon(ImageIO.read(Objects.requireNonNull(Main.class.getResource("yee.png"))).getScaledInstance(d(40), d(40), Image.SCALE_SMOOTH));
         } catch (Exception e) {
+            log(e);
             return null;
         }
     }
 
+    public static void log(final Exception e) {
+        e.printStackTrace();
+    }
+
+    public static void log(final String log) {
+        System.out.println(log);
+    }
+
     private void configuraUIManager() {
-        final Font f = new Font("sans", Font.PLAIN, Schermo.d(18));
+        final Font f = new Font("sans", Font.PLAIN, d(18));
 
         UIManager.put("Button.font", f2);
         UIManager.put("Button.background", sh1);
@@ -371,6 +371,11 @@ public class Main implements Serializable {
         UIManager.put("TextField.background", sh1.brighter());
         UIManager.put("TextField.foreground", Color.WHITE);
         UIManager.put("TextField.border", 0);
+        UIManager.put("ComboBox.font", f2);
+        UIManager.put("ComboBox.background", sh1);
+        UIManager.put("ComboBox.foreground", Color.WHITE);
+        UIManager.put("ComboBox.selectionBackground", sh1.brighter());
+        UIManager.put("ComboBox.selectionForeground", Color.WHITE);
         UIManager.put("Label.font", f);
         UIManager.put("Label.foreground", Color.WHITE);
         UIManager.put("Panel.background", Color.black);

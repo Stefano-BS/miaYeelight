@@ -1,4 +1,4 @@
-package miaYeelight.ux.schermo;
+package miayeelight.ux.schermo;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;

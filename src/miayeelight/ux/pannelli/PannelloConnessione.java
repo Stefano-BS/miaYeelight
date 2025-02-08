@@ -1,13 +1,15 @@
-package miaYeelight.ux.pannelli;
+package miayeelight.ux.pannelli;
 
-import miaYeelight.Main;
-import miaYeelight.lang.Strings;
-import miaYeelight.net.Connessione;
-import miaYeelight.ux.schermo.Schermo;
+import miayeelight.Main;
+import miayeelight.lang.Strings;
+import miayeelight.net.Connessione;
 
 import javax.swing.*;
 import java.io.IOException;
 import java.io.Serial;
+
+import static miayeelight.Main.log;
+import static miayeelight.ux.schermo.Schermo.d;
 
 public class PannelloConnessione extends JPanel {
 
@@ -23,16 +25,16 @@ public class PannelloConnessione extends JPanel {
     public PannelloConnessione(Main ref, boolean modoAutomatizzato) {
         super();
         setLayout(null);
-        JLabel intestazione = new JLabel(Strings.get("PannelloConnessione.1"));
-        JButton connetti = new JButton(Strings.get("PannelloConnessione.2"));
+        JLabel intestazione = new JLabel(Strings.get(PannelloConnessione.class, "1"));
+        JButton connetti = new JButton(Strings.get(PannelloConnessione.class, "2"));
         JTextField ip = new JTextField("");
-        intestazione.setBounds(Schermo.d(10), 0, Schermo.d(510), Schermo.d(40));
+        intestazione.setBounds(d(10), 0, d(510), d(40));
         add(intestazione);
-        desc.setBounds(Schermo.d(10), Schermo.d(50), Schermo.d(510), Schermo.d(40));
+        desc.setBounds(d(10), d(50), d(510), d(40));
         desc.setFont(ref.f2);
         add(desc);
         ip.setHorizontalAlignment(SwingConstants.CENTER);
-        ip.setText(Connessione.IP_DEFAULT_B_012 + Connessione.IP_DEFAULD_B_3);
+        ip.setText(Connessione.IP_DEFAULT_B_012 + Connessione.IP_DEFAULT_B_3);
         connetti.setFocusable(false);
         connetti.addActionListener(click -> {
             if (ref.getConnessione().connettiA(ip.getText())) {
@@ -46,30 +48,30 @@ public class PannelloConnessione extends JPanel {
         add(ip);
 
         if (modoAutomatizzato) {
-            ip.setBounds(Schermo.d(10), Schermo.d(100), Schermo.d(350), Schermo.d(40));
-            connetti.setBounds(Schermo.d(370), Schermo.d(100), Schermo.d(150), Schermo.d(40));
+            ip.setBounds(d(10), d(100), d(350), d(40));
+            connetti.setBounds(d(370), d(100), d(150), d(40));
         } else {
-            JButton avviaScansione = new JButton(Strings.get("PannelloConnessione.4"));
+            JButton avviaScansione = new JButton(Strings.get(PannelloConnessione.class, "4"));
             avviaScansione.setFocusable(false);
             avviaScansione.addActionListener(click -> {
                 try {
-                    ref.getConnessione().connetti(false);
+                    ref.getConnessione().connetti();
                     String[] proprieta = ref.getConnessione().scaricaProprieta();
                     ref.tornaStatico();
                     ref.configuraPannelloPrincipaleConStatoLampada(proprieta);
                     ref.schedulaExtListener();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    log(e);
                 }
             });
-            ip.setBounds(Schermo.d(10), Schermo.d(100), Schermo.d(200), Schermo.d(40));
-            avviaScansione.setBounds(Schermo.d(370), Schermo.d(100), Schermo.d(140), Schermo.d(40));
-            connetti.setBounds(Schermo.d(220), Schermo.d(100), Schermo.d(140), Schermo.d(40));
+            ip.setBounds(d(10), d(100), d(200), d(40));
+            avviaScansione.setBounds(d(370), d(100), d(140), d(40));
+            connetti.setBounds(d(220), d(100), d(140), d(40));
             add(avviaScansione);
             avviaScansione.setEnabled(true);
         }
 
-        setBounds(0, 0, Schermo.d(530), Schermo.d(150));
+        setBounds(0, 0, d(530), d(150));
         setVisible(true);
     }
 

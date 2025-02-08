@@ -1,7 +1,7 @@
-package miaYeelight.net;
+package miayeelight.net;
 
-import miaYeelight.Main;
-import miaYeelight.lang.Strings;
+import miayeelight.Main;
+import miayeelight.lang.Strings;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -12,13 +12,15 @@ import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
+import static miayeelight.Main.log;
+
 public class Connessione implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
     public static final String IP_DEFAULT_B_012 = "192.168.1.";
-    public static final String IP_DEFAULD_B_3 = "100";
+    public static final String IP_DEFAULT_B_3 = "100";
 
     private transient Socket telnet = null;
     private transient PrintStream out = null;
@@ -34,74 +36,60 @@ public class Connessione implements Serializable {
         this.ref = ref;
     }
 
-    public boolean connetti(boolean tentativoIP100) throws IOException {
-        DatagramSocket discovery = new DatagramSocket(17000);
-        try {
+    public boolean connetti() throws IOException {
+        try (final DatagramSocket discovery = new DatagramSocket(17000)) {
             byte[] payload = "M-SEARCH * HTTP/1.1\r\nHOST: 239.255.255.250:1982\r\nMAN: \"ssdp:discover\"\r\nST: wifi_bulb".getBytes(StandardCharsets.US_ASCII);
             DatagramPacket request = new DatagramPacket(payload, payload.length, new InetSocketAddress("239.255.255.250", 1982)); // 1982 dal protocollo Yeelight
             discovery.send(request);
             DatagramPacket reply = new DatagramPacket(new byte[512], 512);
             discovery.setSoTimeout(1500);
             discovery.receive(reply);
+
             String ip = new String(reply.getData(), StandardCharsets.UTF_8);
             discovery.disconnect();
-            discovery.close();
-            System.out.print(ip);
+
+            log(ip);
             ip = ip.substring(ip.indexOf("yeelight://") + 11);
             ip = ip.substring(0, ip.indexOf(':'));
-            (telnet = new Socket()).connect(new InetSocketAddress(ip, 55443), 1000); // 5543 dal protocollo Yeelight
+            telnet = new Socket();
+            telnet.connect(new InetSocketAddress(ip, 55443), 1000); // 5543 dal protocollo Yeelight
             out = new PrintStream(telnet.getOutputStream(), true);
             in = new Scanner(telnet.getInputStream());
             if (telnet.isConnected()) {
                 return true;
             }
         } catch (ConnectException | SocketTimeoutException e) {
-            e.printStackTrace();
-            discovery.close();
+            log(e);
         }
-        System.out.println(Strings.get("Connessione.5"));
+        log(Strings.get(Connessione.class, "5"));
 
         finitoIlCiclo = false;
         noCiclo = false;
-        try { //Tentativo per IP locale 100
-            if (tentativoIP100) {
-                ref.getPannelloConnessione().setTestoDescrizione(Strings.get("Connessione.10") + IP_DEFAULT_B_012 + IP_DEFAULD_B_3);
-                (telnet = new Socket()).connect(new InetSocketAddress(IP_DEFAULT_B_012 + IP_DEFAULD_B_3, 55443), 200);
-                System.out.println(Strings.get("Connessione.7"));
-                //telnet = new Socket("192.168.1.100", 55443);	//Abbandonata questa modalità perché non permette di impostare un timeout a priori
-                out = new PrintStream(telnet.getOutputStream(), true);
-                in = new Scanner(telnet.getInputStream());
-            } else {
-                throw new ConnectException();
-            }
 
-        } catch (ConnectException | SocketTimeoutException e) {
-            if (tentativoIP100) {
-                System.out.println(Strings.get("Connessione.7"));
-            }
-            ref.getFrame().setVisible(true);
-            finitoIlCiclo = false;
-            noCiclo = false;
-            for (int i = 2; i < 255; i++) {
-                try {
-                    if (stop) {
-                        stop = false;
-                        i--;
-                        ref.getPannelloConnessione().setTestoDescrizione(Strings.get("Connessione.9") + ipVarGlobale);
-                        (telnet = new Socket()).connect(new InetSocketAddress(ipVarGlobale, 55443), 2000);
-                        out = new PrintStream(telnet.getOutputStream(), true);
-                        in = new Scanner(telnet.getInputStream());
-                        break;
-                    }
-                    ref.getPannelloConnessione().setTestoDescrizione(Strings.get("Connessione.10") + IP_DEFAULT_B_012 + i);
-                    (telnet = new Socket()).connect(new InetSocketAddress(IP_DEFAULT_B_012 + i, 55443), 150);
+        ref.getFrame().setVisible(true);
+        for (int i = 2; i < 255; i++) {
+            try {
+                if (stop) {
+                    stop = false;
+                    i--;
+                    ref.getPannelloConnessione().setTestoDescrizione(Strings.get(Connessione.class, "9") + ipVarGlobale);
+                    telnet = new Socket();
+                    telnet.connect(new InetSocketAddress(ipVarGlobale, 55443), 2000);
                     out = new PrintStream(telnet.getOutputStream(), true);
                     in = new Scanner(telnet.getInputStream());
                     break;
-                } catch (ConnectException | SocketTimeoutException ignored) {
                 }
+                ref.getPannelloConnessione().setTestoDescrizione(Strings.get(Connessione.class, "10") + IP_DEFAULT_B_012 + i);
+                telnet = new Socket();
+                telnet.connect(new InetSocketAddress(IP_DEFAULT_B_012 + i, 55443), 150);
+                out = new PrintStream(telnet.getOutputStream(), true);
+                in = new Scanner(telnet.getInputStream());
+                break;
+            } catch (ConnectException | SocketTimeoutException e) {
+                log(e);
             }
         }
+
         finitoIlCiclo = true;
 
         return telnet.isConnected();
@@ -109,17 +97,19 @@ public class Connessione implements Serializable {
 
     public boolean connettiA(String ip) {
         if (finitoIlCiclo || noCiclo) {
-            ref.getPannelloConnessione().setTestoDescrizione(Strings.get("Connessione.9") + ip);
+            ref.getPannelloConnessione().setTestoDescrizione(Strings.get(Connessione.class, "9") + ip);
             try {
-                (telnet = new Socket()).connect(new InetSocketAddress(ip, 55443));
+                telnet = new Socket();
+                telnet.connect(new InetSocketAddress(ip, 55443));
                 out = new PrintStream(telnet.getOutputStream(), true);
                 in = new Scanner(telnet.getInputStream());
-            } catch (IOException ignored) {
+            } catch (IOException e) {
+                log(e);
             }
             if (telnet.isConnected()) {
                 return true;
             } else {
-                JOptionPane.showMessageDialog(null, Strings.get("Connessione.12"), Strings.get("Connessione.13"), JOptionPane.ERROR_MESSAGE, ref.yee);
+                JOptionPane.showMessageDialog(null, Strings.get(Connessione.class, "12"), Strings.get(Connessione.class, "13"), JOptionPane.ERROR_MESSAGE, ref.yee);
                 return false;
             }
         } else {
@@ -166,8 +156,8 @@ public class Connessione implements Serializable {
         send("{\"id\":0,\"method\":\"set_bright\",\"params\":[" + v + "]}");
     }
 
-    public void temperatura(int K) {
-        send("{\"id\":0,\"method\":\"set_ct_abx\",\"params\":[" + K + ",\"smooth\",500]}");
+    public void temperatura(int kelvin) {
+        send("{\"id\":0,\"method\":\"set_ct_abx\",\"params\":[" + kelvin + ",\"smooth\",500]}");
     }
 
     public void setRGB(int r, int g, int b) {
@@ -204,8 +194,8 @@ public class Connessione implements Serializable {
         try {
             out.println(t);
         } catch (Exception e) {
-            System.out.print(Strings.get("Connessione.41"));
-            System.out.println(t);
+            log(e);
+            log(Strings.get(Connessione.class, "41") + t);
         }
     }
 
@@ -215,7 +205,8 @@ public class Connessione implements Serializable {
             out.close();
             telnet.close();
             telnet = null;
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log(e);
         }
     }
 
