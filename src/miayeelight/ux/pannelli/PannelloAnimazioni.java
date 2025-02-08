@@ -28,6 +28,9 @@ public class PannelloAnimazioni extends JPanel {
     private ArrayList<JButton> rimovitori = new ArrayList<>();
     private final JButton avviaAnimazione = new JButton(Strings.get(PannelloAnimazioni.class, "6"));
     private final JButton torna = new JButton(Strings.get(PannelloAnimazioni.class, "7"));
+    private final JButton caricaAnimazione = new JButton(Strings.get(PannelloAnimazioni.class, "4"));
+    private final JButton salvaAnimazione = new JButton(Strings.get(PannelloAnimazioni.class, "5"));
+    private final JLabel[] intestazione = {new JLabel(Strings.get(PannelloAnimazioni.class, "0")), new JLabel(Strings.get(PannelloAnimazioni.class, "1")), new JLabel(Strings.get(PannelloAnimazioni.class, "2")), new JLabel(Strings.get(PannelloAnimazioni.class, "3"))};
     private AnteprimaAnimazione anteprima;
     private int Y = d(10);
 
@@ -66,9 +69,7 @@ public class PannelloAnimazioni extends JPanel {
         this.ref = ref;
         setLayout(null);
         setBackground(Main.bg);
-        JButton caricaAnimazione = new JButton(Strings.get(PannelloAnimazioni.class, "4"));
         caricaAnimazione.setFocusable(false);
-        JButton salvaAnimazione = new JButton(Strings.get(PannelloAnimazioni.class, "5"));
         salvaAnimazione.setFocusable(false);
         caricaAnimazione.setBounds(d(10), Y, d(250), d(40));
         caricaAnimazione.addActionListener(this::caricaAnimazione);
@@ -96,7 +97,6 @@ public class PannelloAnimazioni extends JPanel {
         });
         add(salvaAnimazione);
         Y += d(50);
-        JLabel[] intestazione = {new JLabel(Strings.get(PannelloAnimazioni.class, "0")), new JLabel(Strings.get(PannelloAnimazioni.class, "1")), new JLabel(Strings.get(PannelloAnimazioni.class, "2")), new JLabel(Strings.get(PannelloAnimazioni.class, "3"))};
         intestazione[0].setBounds(d(10), Y, d(80), d(40));
         intestazione[0].setHorizontalAlignment(SwingConstants.CENTER);
         intestazione[1].setBounds(d(80), Y, d(80), d(40));
@@ -153,6 +153,17 @@ public class PannelloAnimazioni extends JPanel {
         setSize(new Dimension(d(530), Y));
         setPreferredSize(new Dimension(d(530), Y));
         setVisible(true);
+    }
+
+    public void riscriviEtichette() {
+        avviaAnimazione.setText(Strings.get(PannelloAnimazioni.class, "6"));
+        torna.setText(Strings.get(PannelloAnimazioni.class, "7"));
+        caricaAnimazione.setText(Strings.get(PannelloAnimazioni.class, "4"));
+        salvaAnimazione.setText(Strings.get(PannelloAnimazioni.class, "5"));
+        intestazione[0].setText(Strings.get(PannelloAnimazioni.class, "0"));
+        intestazione[1].setText(Strings.get(PannelloAnimazioni.class, "1"));
+        intestazione[2].setText(Strings.get(PannelloAnimazioni.class, "2"));
+        intestazione[3].setText(Strings.get(PannelloAnimazioni.class, "3"));
     }
 
     private void caricaAnimazione(final ActionEvent actionEvent) {

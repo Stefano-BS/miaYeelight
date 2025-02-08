@@ -31,6 +31,7 @@ public class PannelloImpostazioni extends JPanel {
         this.ref = ref;
 
         JLabel intestazione = new JLabel(Strings.get(PannelloImpostazioni.class, "0"));
+        intestazione.setFont(ref.carattereGrande);
         intestazione.setBounds(d(10), d(Y), d(510), d(40));
         Y += 50;
         add(intestazione);
@@ -62,7 +63,7 @@ public class PannelloImpostazioni extends JPanel {
     private void addSetting(final String nomeImpostazione, final String valoreCorrente, final boolean modificabile) {
         final JLabel nome = new JLabel(Strings.get(PannelloImpostazioni.class, nomeImpostazione));
         nome.setBounds(d(10), d(Y), d(360), d(40));
-        nome.setFont(ref.f2);
+        nome.setFont(ref.caratterePiccolo);
         add(nome);
 
         if (modificabile) {
@@ -75,7 +76,7 @@ public class PannelloImpostazioni extends JPanel {
                 @Override
                 protected JButton createArrowButton() {
                     final JButton bottone = new JButton("∨");
-                    bottone.setBackground(new Color(70, 70, 70));
+                    bottone.setBackground(Color.darkGray);
                     bottone.setForeground(Color.WHITE);
                     bottone.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
                     return bottone;

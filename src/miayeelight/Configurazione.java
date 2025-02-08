@@ -17,22 +17,31 @@ public class Configurazione implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    public static final String TIMER_INT = "timerInt";
+    public static final String RATIO = "ratio";
+    public static final String COLORE_W_10 = "coloreW10";
+    public static final String ALGO = "algo";
+    public static final String LANG = "lang";
+    public static final String SIGMA = "sigma";
+
     private static final Map<String, String> CONF_BASE = Map.of( //
-            "lang", Locale.getDefault().getLanguage(), //
-            "algo", "foto", //
-            "coloreW10", "no", //
-            "ratio", "auto", //
-            "timerInt", "350"
+            LANG, Locale.getDefault().getLanguage(), //
+            ALGO, "foto", //
+            COLORE_W_10, "no", //
+            RATIO, "auto", //
+            TIMER_INT, "350",  //
+            SIGMA, "8"
     );
 
     private static final Map<String, String[]> VALORI_AMMISSIBILI = Map.of( //
-            "lang", new String[]{" it", " pt", " es", " fr", " en"}, //
-            "algo", new String[]{" foto", " pts"}, //
-            "coloreW10", new String[]{" no", " si"}, //
-            "timerInt", new String[]{" 100", " 150", " 220", " 350", " 500", " 800", " 1500"}
+            LANG, new String[]{" it", " pt", " es", " fr", " en"}, //
+            ALGO, new String[]{" foto", " pts"}, //
+            COLORE_W_10, new String[]{" no", " si"}, //
+            TIMER_INT, new String[]{" 100", " 150", " 220", " 350", " 500", " 800", " 1500"}, //
+            SIGMA, new String[]{" 1", " 3", " 5", " 8", " 11", " 15"}
     );
 
-    public static final Set<String> IMPOSTAZIONI_NON_MODIFICABILI = Set.of("ratio");
+    public static final Set<String> IMPOSTAZIONI_NON_MODIFICABILI = Set.of(RATIO);
 
     private static final Map<String, String> confCorrente = new HashMap<>(CONF_BASE);
 
@@ -45,18 +54,18 @@ public class Configurazione implements Serializable {
     }
 
     public static int getAlgoritmo() {
-        return "pnt".equals(confCorrente.get("algo")) ? ALGORITMO_PUNTI : ALGORITMO_FOTO;
+        return "pnt".equals(confCorrente.get(ALGO)) ? ALGORITMO_PUNTI : ALGORITMO_FOTO;
     }
 
     public static boolean getMostraWin10() {
-        return !"no".equals(Configurazione.get("coloreW10"));
+        return !"no".equals(Configurazione.get(COLORE_W_10));
     }
 
     public static long getIntervalloTimer() {
         try {
-            return Long.parseLong(confCorrente.get("timerInt"));
+            return Long.parseLong(confCorrente.get(TIMER_INT));
         } catch (NumberFormatException e) {
-            return Long.parseLong(CONF_BASE.get("timetInt"));
+            return Long.parseLong(CONF_BASE.get(TIMER_INT));
         }
     }
 
@@ -66,7 +75,7 @@ public class Configurazione implements Serializable {
                     .filter(p -> p.contains(":")).map(parametro -> parametro.split(":")) //
                     .map(parametroDiviso -> Map.entry(parametroDiviso[0], parametroDiviso[1])).toList();
 
-            mappaParametri.stream().filter(parametro -> "ratio".equals(parametro.getKey())).findFirst().ifPresent(parametro -> {
+            mappaParametri.stream().filter(parametro -> RATIO.equals(parametro.getKey())).findFirst().ifPresent(parametro -> {
                 if ("auto".equals(parametro.getValue().trim())) {
                     Schermo.setRatio(((double) Toolkit.getDefaultToolkit().getScreenResolution()) / 100);
                 } else {
@@ -79,13 +88,14 @@ public class Configurazione implements Serializable {
     }
 
     public static void applicaConfigurazione(final Map<String, String> parametri) {
-        parametri.forEach((key, value) -> parametri.put(key, value.trim()));
-        
-        if (!Objects.equals(confCorrente.get("lang"), parametri.get("lang"))) {
-            Strings.configMessages(parametri.get("lang"));
+        final Map<String, String> paramSanificati = new HashMap<>();
+        parametri.forEach((key, value) -> paramSanificati.put(key, value.trim()));
+
+        if (!Objects.equals(confCorrente.get(LANG), paramSanificati.get(LANG))) {
+            Strings.configMessages(paramSanificati.get(LANG));
         }
 
-        confCorrente.putAll(parametri);
+        confCorrente.putAll(paramSanificati);
     }
 
     public static String[] getValoriAmmissibili(String nomeImpostazione) {

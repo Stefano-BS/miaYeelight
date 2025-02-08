@@ -2,6 +2,7 @@ package miayeelight;
 
 import miayeelight.lang.Strings;
 import miayeelight.net.Connessione;
+import miayeelight.ux.componenti.BarraTitolo;
 import miayeelight.ux.pannelli.PannelloAnimazioni;
 import miayeelight.ux.pannelli.PannelloConnessione;
 import miayeelight.ux.pannelli.PannelloImpostazioni;
@@ -11,9 +12,6 @@ import miayeelight.ux.schermo.TimerColoreSchermo;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 import java.io.IOException;
 import java.io.Serial;
 import java.io.Serializable;
@@ -23,6 +21,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
+import static miayeelight.Configurazione.LANG;
 import static miayeelight.ux.schermo.Schermo.d;
 
 public class Main implements Serializable {
@@ -30,7 +29,9 @@ public class Main implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    public final Font f2;
+    public final Font caratterePiccolo;
+    public final Font carattereMedio;
+    public final Font carattereGrande;
     private static final Color sh1 = new Color(40, 40, 40, 255);
     public static final Color bg = new Color(0, 0, 0, 255);
     public static final Color trasparente = new Color(0, 0, 0, 0);
@@ -40,13 +41,10 @@ public class Main implements Serializable {
     private transient Timer aggiornatoreWinAccent;
     private transient Timer aggiornatoreSchermo;
     private transient Timer extList = new Timer();
-    private int lkpX = 0;
-    private int lkpY = 0;
 
     private final JFrame frame;
-    private final JPanel rosso = new JPanel();
+    private final BarraTitolo rosso;
     private PannelloConnessione pannelloConnessione;
-    private JLabel titolo;
     private PannelloPrincipale pannello;
     private PannelloAnimazioni pannelloAnimazioni;
     private String nomeLampadina;
@@ -59,9 +57,12 @@ public class Main implements Serializable {
 
     private Main(final String[] args) throws IOException {
         Configurazione.applicaConfigurazione(args);
-        Strings.configMessages(Configurazione.get("lang"));
 
-        f2 = new Font("sans", Font.PLAIN, d(16));
+        carattereGrande = new Font(Font.SANS_SERIF, Font.PLAIN, d(22));
+        carattereMedio = new Font(Font.SANS_SERIF, Font.PLAIN, d(18));
+        caratterePiccolo = new Font(Font.SANS_SERIF, Font.PLAIN, d(16));
+        Strings.configMessages(Configurazione.get(LANG));
+
         yee = caricaIcona();
         configuraUIManager();
 
@@ -73,7 +74,7 @@ public class Main implements Serializable {
         frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
         frame.setIconImage(yee.getImage());
         frame.setBackground(new Color(0, 0, 0, 0));
-        creaBarraDelTitolo();
+        rosso = new BarraTitolo(this, yee);
         rosso.setBounds(0, 0, d(530), d(40));
         frame.getContentPane().add(rosso, BorderLayout.NORTH);
         pannelloConnessione = new PannelloConnessione(this, true);
@@ -111,13 +112,13 @@ public class Main implements Serializable {
         pannello.getHue().setValue(Integer.parseInt(statoIniziale[3]));
         pannello.getSat().setValue(Integer.parseInt(statoIniziale[4]));
         nomeLampadina = statoIniziale[6];
-        titolo.setText(nomeLampadina);
+        rosso.setTitolo(nomeLampadina);
         pannello.setUltimaModalita(!statoIniziale[2].equals("2"));
         pannello.aggiornaAnteprima();
         pannello.setModoDiretto(true);
     }
 
-    private void tornaModalitaRicerca() {
+    public void tornaModalitaRicerca() {
         terminaAggiornatoreWinAccent();
         extList.cancel();
         extList = new Timer();
@@ -151,6 +152,7 @@ public class Main implements Serializable {
         frame.getContentPane().add(rosso, BorderLayout.NORTH);
         frame.getContentPane().add(pannelloImpostazioni, BorderLayout.CENTER);
         frame.setSize(rosso.getWidth(), rosso.getHeight() + pannelloImpostazioni.getHeight());
+        frame.revalidate();
     }
 
     public void tornaStatico() {
@@ -160,108 +162,15 @@ public class Main implements Serializable {
         } else {
             pannello.riscriviEtichette();
             pannello.mostraWin10Accent(Configurazione.getMostraWin10());
+            if (pannelloAnimazioni != null) {
+                pannelloAnimazioni.riscriviEtichette();
+            }
         }
         frame.getContentPane().removeAll();
         frame.getContentPane().add(rosso, BorderLayout.NORTH);
         frame.getContentPane().add(pannello, BorderLayout.CENTER);
         frame.setSize(rosso.getWidth(), rosso.getHeight() + pannello.getHeight());
-    }
-
-    void creaBarraDelTitolo() {
-        titolo = new JLabel(nomeLampadina);
-        JButton disconnetti = new JButton("❌");
-        JLabel icona = new JLabel();
-        rosso.setLayout(null);
-        rosso.setBackground(new Color(160, 0, 0));
-        titolo.setBounds(0, 0, d(530), d(40));
-        titolo.setHorizontalAlignment(SwingConstants.CENTER);
-        titolo.setVerticalAlignment(SwingConstants.CENTER);
-        rosso.add(titolo);
-        titolo.addMouseListener(new MouseListener() {
-            public void mouseClicked(MouseEvent click) {
-                if (click.getX() > d(490)) {
-                    disconnetti.doClick();
-                } else if (click.getX() > d(40)) {
-                    String nome = JOptionPane.showInputDialog(Strings.get(Main.class, "16"), nomeLampadina);
-                    if (nome != null && !nome.isEmpty()) {
-                        connessione.cambiaNome(nome);
-                        nomeLampadina = nome;
-                        titolo.setText(nomeLampadina);
-                    }
-                } else if (!Arrays.asList(frame.getContentPane().getComponents()).contains(pannelloConnessione)) {
-                    tornaModalitaRicerca();
-                }
-            }
-
-            public void mouseEntered(MouseEvent click) {
-                if (click.getX() > d(490)) {
-                    disconnetti.setBackground(new Color(90, 0, 0));
-                }
-            }
-
-            public void mouseExited(MouseEvent click) {
-                disconnetti.setBackground(new Color(120, 0, 0));
-                lkpX = 0;
-                lkpY = 0;
-                titolo.setText(nomeLampadina);
-            }
-
-            public void mousePressed(MouseEvent click) {
-                if (click.getX() > d(490)) {
-                    disconnetti.setBackground(new Color(60, 0, 0));
-                }
-            }
-
-            public void mouseReleased(MouseEvent click) {
-                if (click.getX() > d(490)) {
-                    disconnetti.setBackground(new Color(120, 0, 0));
-                }
-                lkpX = 0;
-                lkpY = 0;
-            }
-        });
-
-        titolo.addMouseMotionListener(new MouseMotionListener() {
-            public void mouseDragged(MouseEvent d) {
-                if (d.getX() < d(490)) {
-                    int nuovaX = d.getXOnScreen();
-                    int nuovaY = d.getYOnScreen();
-                    if (lkpX != 0 || lkpY != 0) {
-                        int xInc = nuovaX - lkpX;
-                        int yInc = nuovaY - lkpY;
-                        frame.setLocation(nuovaX - d.getX() + xInc, nuovaY - d.getY() + yInc);
-                    }
-                    lkpX = nuovaX;
-                    lkpY = nuovaY;
-                }
-            }
-
-            public void mouseMoved(MouseEvent d) {
-                if (d.getX() > d(490)) {
-                    disconnetti.setBackground(new Color(90, 0, 0));
-                } else {
-                    disconnetti.setBackground(new Color(120, 0, 0));
-                }
-                if (d.getX() <= d(40) && !Arrays.asList(frame.getContentPane().getComponents()).contains(pannelloConnessione)) {
-                    titolo.setText(Strings.get(Main.class, "18"));
-                } else {
-                    titolo.setText(nomeLampadina);
-                }
-            }
-        });
-
-        disconnetti.setBounds(d(490), 0, d(40), d(40));
-        disconnetti.addActionListener(click -> {
-            connessione.chiudi();
-            System.exit(0);
-        });
-        disconnetti.setFocusable(false);
-        disconnetti.setBackground(new Color(120, 0, 0));
-        rosso.add(disconnetti);
-        icona.setIcon(yee);
-        icona.setBounds(0, 0, d(40), d(40));
-        rosso.add(icona);
-        rosso.setPreferredSize(new Dimension(d(530), d(40)));
+        frame.repaint();
     }
 
     public void schedulaExtListener() {
@@ -360,34 +269,32 @@ public class Main implements Serializable {
     }
 
     private void configuraUIManager() {
-        final Font f = new Font("sans", Font.PLAIN, d(18));
-
-        UIManager.put("Button.font", f2);
+        UIManager.put("Button.font", caratterePiccolo);
         UIManager.put("Button.background", sh1);
         UIManager.put("Button.foreground", Color.WHITE);
         UIManager.put("Button.select", sh1.brighter());
         UIManager.put("Button.border", 0);
-        UIManager.put("TextField.font", f2);
+        UIManager.put("TextField.font", caratterePiccolo);
         UIManager.put("TextField.background", sh1.brighter());
         UIManager.put("TextField.foreground", Color.WHITE);
         UIManager.put("TextField.border", 0);
-        UIManager.put("ComboBox.font", f2);
+        UIManager.put("ComboBox.font", caratterePiccolo);
         UIManager.put("ComboBox.background", sh1);
         UIManager.put("ComboBox.foreground", Color.WHITE);
         UIManager.put("ComboBox.selectionBackground", sh1.brighter());
         UIManager.put("ComboBox.selectionForeground", Color.WHITE);
-        UIManager.put("Label.font", f);
+        UIManager.put("Label.font", carattereMedio);
         UIManager.put("Label.foreground", Color.WHITE);
         UIManager.put("Panel.background", Color.black);
-        UIManager.put("OptionPane.messageFont", f2);
-        UIManager.put("OptionPane.buttonFont", f2);
+        UIManager.put("OptionPane.messageFont", caratterePiccolo);
+        UIManager.put("OptionPane.buttonFont", caratterePiccolo);
         UIManager.put("OptionPane.background", Color.black);
         UIManager.put("OptionPane.messageForeground", Color.WHITE);
         UIManager.put("List.foreground", Color.WHITE);
         UIManager.put("List.background", sh1);
         UIManager.put("List.selectionBackground", sh1.brighter());
         UIManager.put("List.selectionForeground", Color.WHITE);
-        UIManager.put("List.font", f2);
+        UIManager.put("List.font", caratterePiccolo);
         UIManager.put("ScrollBar.background", sh1.brighter().brighter());
     }
 
@@ -401,6 +308,14 @@ public class Main implements Serializable {
 
     public Connessione getConnessione() {
         return connessione;
+    }
+
+    public String getNomeLampadina() {
+        return nomeLampadina;
+    }
+
+    public void setNomeLampadina(String nomeLampadina) {
+        this.nomeLampadina = nomeLampadina;
     }
 
 }

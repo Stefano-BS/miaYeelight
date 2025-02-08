@@ -1,18 +1,18 @@
 package miayeelight.ux.schermo;
 
+import miayeelight.Configurazione;
 import miayeelight.net.Connessione;
 import miayeelight.ux.pannelli.PannelloPrincipale;
 
 import java.awt.*;
 import java.util.TimerTask;
 
+import static miayeelight.Configurazione.SIGMA;
+
 public class TimerColoreSchermo extends TimerTask {
 
     public static final int ALGORITMO_PUNTI = 0;
     public static final int ALGORITMO_FOTO = 1;
-
-    private static final double SIGMOIDE_MIN_VAL = 1 / (1 + Math.exp(-7 * -0.15));
-    private static final double SIGMOIDE_MAX_VAL = 1 / (1 + Math.exp(-7 * (1 - 0.15)));
 
     private final int passoMinimo;
     private final int passoMassimo;
@@ -47,7 +47,7 @@ public class TimerColoreSchermo extends TimerTask {
             final Color c = Schermo.ottieniMedia((double) campione / 15);
             final float[] hsbVals = Color.RGBtoHSB(c.getRed(), c.getGreen(), c.getBlue(), new float[3]);
             tonalita = (int) (hsbVals[0] * 360);
-            saturazioneAggiustata = sigmoide(hsbVals[1]);
+            saturazioneAggiustata = sigmoide(hsbVals[1], Integer.parseInt(Configurazione.get(SIGMA)));
         }
 
         final boolean modoPrima = pannello.getModoDiretto();
@@ -69,9 +69,11 @@ public class TimerColoreSchermo extends TimerTask {
         }
     }
 
-    private int sigmoide(final float h) {
-        final double sigmaNonNormalizzata = (1 / (1 + Math.exp(-7 * (h - 0.15))));
-        return (int) (100 * ((sigmaNonNormalizzata - SIGMOIDE_MIN_VAL) / (SIGMOIDE_MAX_VAL - SIGMOIDE_MIN_VAL)));
+    private int sigmoide(final float h, final int k) {
+        final double sigmaNonNormalizzata = (1 / (1 + Math.exp(-k * (h - 0.15))));
+        final double sigmoideMinVal = 1 / (1 + Math.exp(-k * -0.15));
+        final double sigmoideMaxVal = 1 / (1 + Math.exp(-k * (1 - 0.15)));
+        return (int) (100 * ((sigmaNonNormalizzata - sigmoideMinVal) / (sigmoideMaxVal - sigmoideMinVal)));
     }
 
 }

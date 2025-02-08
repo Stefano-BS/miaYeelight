@@ -31,7 +31,7 @@ public class PannelloConnessione extends JPanel {
         intestazione.setBounds(d(10), 0, d(510), d(40));
         add(intestazione);
         desc.setBounds(d(10), d(50), d(510), d(40));
-        desc.setFont(ref.f2);
+        desc.setFont(ref.caratterePiccolo);
         add(desc);
         ip.setHorizontalAlignment(SwingConstants.CENTER);
         ip.setText(Connessione.IP_DEFAULT_B_012 + Connessione.IP_DEFAULT_B_3);
