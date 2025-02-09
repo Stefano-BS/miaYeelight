@@ -4,13 +4,14 @@ import miayeelight.Main;
 import miayeelight.lang.Strings;
 
 import javax.swing.*;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.Serial;
-import java.io.Serializable;
+import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.util.Scanner;
+import java.util.Arrays;
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static miayeelight.Main.log;
 
@@ -24,19 +25,28 @@ public class Connessione implements Serializable {
 
     private transient Socket telnet = null;
     private transient PrintStream out = null;
-    private transient Scanner in = null;
-    private String ipVarGlobale;
-    private boolean stop = false;
-    private boolean finitoIlCiclo = true;
-    private boolean noCiclo = true;
+    private transient BufferedReader in = null;
+
+    private transient Deque<IndirizzoConnessione> codaTentativi;
+    private String ultimoIndirizzoConnesso = null;
 
     private final Main ref;
+
+    private record IndirizzoConnessione(String ip, int tempo) {
+    }
 
     public Connessione(Main ref) {
         this.ref = ref;
     }
 
-    public boolean connetti() throws IOException {
+    public boolean connetti(boolean ciclo) throws IOException {
+        if (trovaConMulticast()) {
+            return true;
+        }
+        return ciclo && trovaConRicercaEsaustiva();
+    }
+
+    private boolean trovaConMulticast() throws IOException {
         try (final DatagramSocket discovery = new DatagramSocket(17000)) {
             byte[] payload = "M-SEARCH * HTTP/1.1\r\nHOST: 239.255.255.250:1982\r\nMAN: \"ssdp:discover\"\r\nST: wifi_bulb".getBytes(StandardCharsets.US_ASCII);
             DatagramPacket request = new DatagramPacket(payload, payload.length, new InetSocketAddress("239.255.255.250", 1982)); // 1982 dal protocollo Yeelight
@@ -48,87 +58,82 @@ public class Connessione implements Serializable {
             String ip = new String(reply.getData(), StandardCharsets.UTF_8);
             discovery.disconnect();
 
-            log(ip);
             ip = ip.substring(ip.indexOf("yeelight://") + 11);
             ip = ip.substring(0, ip.indexOf(':'));
-            telnet = new Socket();
-            telnet.connect(new InetSocketAddress(ip, 55443), 1000); // 5543 dal protocollo Yeelight
-            out = new PrintStream(telnet.getOutputStream(), true);
-            in = new Scanner(telnet.getInputStream());
-            if (telnet.isConnected()) {
-                return true;
-            }
+
+            return tentaConnessione(new IndirizzoConnessione(ip, 1000));
         } catch (ConnectException | SocketTimeoutException e) {
-            log(e);
-        }
-        log(Strings.get(Connessione.class, "5"));
-
-        finitoIlCiclo = false;
-        noCiclo = false;
-
-        ref.getFrame().setVisible(true);
-        for (int i = 2; i < 255; i++) {
-            try {
-                if (stop) {
-                    stop = false;
-                    i--;
-                    ref.getPannelloConnessione().setTestoDescrizione(Strings.get(Connessione.class, "9") + ipVarGlobale);
-                    telnet = new Socket();
-                    telnet.connect(new InetSocketAddress(ipVarGlobale, 55443), 2000);
-                    out = new PrintStream(telnet.getOutputStream(), true);
-                    in = new Scanner(telnet.getInputStream());
-                    break;
-                }
-                ref.getPannelloConnessione().setTestoDescrizione(Strings.get(Connessione.class, "10") + IP_DEFAULT_B_012 + i);
-                telnet = new Socket();
-                telnet.connect(new InetSocketAddress(IP_DEFAULT_B_012 + i, 55443), 150);
-                out = new PrintStream(telnet.getOutputStream(), true);
-                in = new Scanner(telnet.getInputStream());
-                break;
-            } catch (ConnectException | SocketTimeoutException e) {
-                log(e);
-            }
-        }
-
-        finitoIlCiclo = true;
-
-        return telnet.isConnected();
-    }
-
-    public boolean connettiA(String ip) {
-        if (finitoIlCiclo || noCiclo) {
-            ref.getPannelloConnessione().setTestoDescrizione(Strings.get(Connessione.class, "9") + ip);
-            try {
-                telnet = new Socket();
-                telnet.connect(new InetSocketAddress(ip, 55443));
-                out = new PrintStream(telnet.getOutputStream(), true);
-                in = new Scanner(telnet.getInputStream());
-            } catch (IOException e) {
-                log(e);
-            }
-            if (telnet.isConnected()) {
-                return true;
-            } else {
-                JOptionPane.showMessageDialog(null, Strings.get(Connessione.class, "12"), Strings.get(Connessione.class, "13"), JOptionPane.ERROR_MESSAGE, ref.yee);
-                return false;
-            }
-        } else {
-            stop = true;
-            ipVarGlobale = ip;
+            log(Strings.get(Connessione.class, "5"));
             return false;
         }
     }
 
+    private boolean trovaConRicercaEsaustiva() throws IOException {
+        ref.getFrame().setVisible(true);
+        codaTentativi = new LinkedList<>();
+        IntStream.range(2, 255).mapToObj(n -> new IndirizzoConnessione(IP_DEFAULT_B_012 + n, 250)).forEach(codaTentativi::add);
+
+        while (!codaTentativi.isEmpty()) {
+            try {
+                IndirizzoConnessione tentativo = codaTentativi.pop();
+
+                ref.getPannelloConnessione().setTestoDescrizione(Strings.get(Connessione.class, "1") + tentativo.ip);
+
+                if (tentaConnessione(tentativo)) {
+                    codaTentativi = null;
+                    return true;
+                }
+            } catch (ConnectException | SocketTimeoutException ignored) {
+                chiudi();
+            }
+        }
+
+        return telnet != null && telnet.isConnected();
+    }
+
+    public boolean connettiA(final String ip, final String messaggio) {
+        if (codaTentativi == null || codaTentativi.isEmpty()) {
+            ref.getPannelloConnessione().setTestoDescrizione(Strings.get(Connessione.class, "8") + ip);
+            try {
+                if (tentaConnessione(new IndirizzoConnessione(ip, 2000))) {
+                    return true;
+                }
+            } catch (IOException e) {
+                chiudi();
+            }
+            ref.getPannelloConnessione().setTestoDescrizione("");
+            JOptionPane.showMessageDialog(null, messaggio, Strings.get(Connessione.class, "3"), JOptionPane.ERROR_MESSAGE, ref.yee);
+            return false;
+        } else {
+            codaTentativi.addFirst(new IndirizzoConnessione(ip, 2000));
+            return false;
+        }
+    }
+
+    private boolean tentaConnessione(final IndirizzoConnessione i) throws IOException {
+        telnet = new Socket();
+        telnet.connect(new InetSocketAddress(i.ip, 55443), i.tempo);
+        telnet.setSoTimeout(500);
+        out = new PrintStream(telnet.getOutputStream(), true);
+        in = new BufferedReader(new InputStreamReader(telnet.getInputStream(), StandardCharsets.UTF_8));
+        ultimoIndirizzoConnesso = i.ip;
+        return telnet.isConnected();
+    }
+
     public String[] scaricaProprieta() {
-        send("{\"id\":1,\"method\":\"get_prop\",\"params\":[\"power\", \"bright\", \"color_mode\", \"hue\", \"sat\", \"ct\", \"name\"]}");
-        String rs;
-        do {
-            rs = in.nextLine();
-        } while (rs.charAt(6) != '1');
+        String[] proprieta = null;
+
+        String rs = invia("{\"id\":1,\"method\":\"get_prop\",\"params\":[\"power\", \"bright\", \"color_mode\", \"hue\", \"sat\", \"ct\", \"name\"]}");
+        while (rs == null || !rs.startsWith("{\"id\":1,")) {
+            if (telnet == null || in == null || out == null) {
+                return proprieta;
+            }
+            rs = ricevi();
+        }
         rs = rs.substring(19);
         rs = rs.replace(",\"", "");
         rs = rs.replace("]}", "");
-        String[] proprieta = rs.split("\"");
+        proprieta = rs.split("\"");
         if (proprieta.length < 7) {
             cambiaNome(Strings.get("AppName"));
             proprieta = new String[]{proprieta[0], proprieta[1], proprieta[2], proprieta[3], proprieta[4], proprieta[5], Strings.get("AppName")};
@@ -137,74 +142,111 @@ public class Connessione implements Serializable {
     }
 
     public void cambiaNome(String nome) {
-        send("{\"id\":1,\"method\":\"set_name\",\"params\":[\"" + nome + "\"]}");
+        invia("{\"id\":1,\"method\":\"set_name\",\"params\":[\"" + nome + "\"]}");
     }
 
     public void accendi() {
-        send("{\"id\":0,\"method\":\"set_power\",\"params\":[\"on\"]}");
+        invia("{\"id\":0,\"method\":\"set_power\",\"params\":[\"on\"]}");
     }
 
     public void spegni() {
-        send("{\"id\":0,\"method\":\"set_power\",\"params\":[\"off\"]}");
+        invia("{\"id\":0,\"method\":\"set_power\",\"params\":[\"off\"]}");
     }
 
     public void timer(int minuti) {
-        send("{\"id\":0,\"method\":\"cron_add\",\"params\":[0," + minuti + "]}");
+        invia("{\"id\":0,\"method\":\"cron_add\",\"params\":[0," + minuti + "]}");
     }
 
     public void setBr(int v) {
-        send("{\"id\":0,\"method\":\"set_bright\",\"params\":[" + v + "]}");
+        invia("{\"id\":0,\"method\":\"set_bright\",\"params\":[" + v + "]}");
     }
 
     public void temperatura(int kelvin) {
-        send("{\"id\":0,\"method\":\"set_ct_abx\",\"params\":[" + kelvin + ",\"smooth\",500]}");
+        invia("{\"id\":0,\"method\":\"set_ct_abx\",\"params\":[" + kelvin + ",\"smooth\",500]}");
     }
 
     public void setRGB(int r, int g, int b) {
-        send("{\"id\":0,\"method\":\"set_rgb\",\"params\":[" + (r * 65536 + g * 256 + b) + "]}");
+        invia("{\"id\":0,\"method\":\"set_rgb\",\"params\":[" + (r * 65536 + g * 256 + b) + "]}");
     }
 
     public void setHS(int hue, int sat) {
-        send("{\"id\":0,\"method\":\"set_hsv\",\"params\":[" + hue + "," + sat + ",\"smooth\",500]}");
+        invia("{\"id\":0,\"method\":\"set_hsv\",\"params\":[" + hue + "," + sat + ",\"smooth\",500]}");
     }
 
     public void animazione(int[][] valori) {
         //Serie di passi tempo, modalità, valore, luminosità
-        if (valori == null) {
-            return;
+        if (valori != null) {
+            final String codiceAnimazione = Arrays.stream(valori).map(seq -> "%d,%d,%d,%d".formatted(seq[0], seq[1], seq[2], seq[3])).collect(Collectors.joining(","));
+            invia("{\"id\":0,\"method\":\"start_cf\",\"params\":[0, 1, \"" + codiceAnimazione + "\"]}");
         }
-        StringBuilder codiceAnimazione = new StringBuilder();
-        for (int[] sequenza : valori) {
-            codiceAnimazione.append(sequenza[0]);
-            codiceAnimazione.append(',');
-            codiceAnimazione.append(sequenza[1]);
-            codiceAnimazione.append(',');
-            codiceAnimazione.append(sequenza[2]);
-            codiceAnimazione.append(',');
-            codiceAnimazione.append(sequenza[3]);
-            codiceAnimazione.append(',');
-        }
-        if (!codiceAnimazione.toString().isEmpty()) {
-            codiceAnimazione = new StringBuilder(codiceAnimazione.substring(0, codiceAnimazione.length() - 1));
-        }
-        send("{\"id\":0,\"method\":\"start_cf\",\"params\":[0, 1, \"" + codiceAnimazione.toString() + "\"]}");
     }
 
-    private void send(String t) {
+    private String invia(String t) {
         try {
+            if (out == null && !riconnetti()) {
+                ref.tornaModalitaRicerca();
+                return null;
+            }
+
             out.println(t);
+            final String risposta = ricevi();
+
+            if (risposta != null && risposta.contains("client quota exceeded")) {
+                chiudi();
+
+                if (!riconnetti()) {
+                    ref.tornaModalitaRicerca();
+                    return null;
+                }
+            }
+            return risposta;
         } catch (Exception e) {
             log(e);
-            log(Strings.get(Connessione.class, "41") + t);
+            log(Strings.get(Connessione.class, "4") + t);
+            return null;
         }
+    }
+
+    private String ricevi() {
+        try {
+            final char[] buffer = new char[512];
+            final int length = in.read(buffer);
+            if (length > 0) {
+                return new String(buffer, 0, length);
+            }
+        } catch (Exception e) {
+            try {
+                chiudi();
+
+                if (!riconnetti()) {
+                    ref.tornaModalitaRicerca();
+                    return null;
+                }
+            } catch (IOException ex) {
+                log(ex);
+            }
+        }
+        return null;
+    }
+
+    private boolean riconnetti() throws IOException {
+        return connettiA(ultimoIndirizzoConnesso, Strings.get(Connessione.class, "6")) && connetti(false);
     }
 
     public void chiudi() {
         try {
-            in.close();
-            out.close();
-            telnet.close();
-            telnet = null;
+            if (in != null) {
+                in.close();
+                in = null;
+            }
+            if (out != null) {
+                out.close();
+                out = null;
+            }
+            if (telnet != null) {
+                telnet.close();
+                telnet = null;
+            }
         } catch (Exception e) {
             log(e);
         }

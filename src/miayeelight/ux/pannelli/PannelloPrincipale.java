@@ -50,14 +50,14 @@ public class PannelloPrincipale extends JPanel {
         seguiWinAccent = new JButton(Strings.get(PannelloPrincipale.class, "9"));
         seguiSchermo = new JButton(Strings.get(PannelloPrincipale.class, "10"));
 
-        int Y = d(10);
-        accendi.setBounds(d(10), Y, d(225), d(40));
+        int y = d(10);
+        accendi.setBounds(d(10), y, d(225), d(40));
 
         final JButton impostazioni = new JButton("🔨");
-        impostazioni.setBounds(d(245), Y, d(40), d(40));
+        impostazioni.setBounds(d(245), y, d(40), d(40));
         impostazioni.addActionListener(click -> ref.apriPannelloImpostazioni());
 
-        timer.setBounds(d(295), Y, d(225), d(40));
+        timer.setBounds(d(295), y, d(225), d(40));
 
         accendi.addActionListener(click -> {
             if (accendi.getText().equals(Strings.get(PannelloPrincipale.class, "0"))) {
@@ -83,8 +83,10 @@ public class PannelloPrincipale extends JPanel {
         }
         timer.addActionListener(click -> {
             try {
-                int tempo = (Integer) JOptionPane.showInputDialog(ref.getFrame(), Strings.get(PannelloPrincipale.class, "14"), Strings.get(PannelloPrincipale.class, "15"), JOptionPane.QUESTION_MESSAGE, ref.yee, listaTimer, 1);
-                ref.getConnessione().timer(tempo);
+                Object scelta = JOptionPane.showInputDialog(ref.getFrame(), Strings.get(PannelloPrincipale.class, "14"), Strings.get(PannelloPrincipale.class, "15"), JOptionPane.QUESTION_MESSAGE, ref.yee, listaTimer, 1);
+                if (scelta instanceof Integer tempo) {
+                    ref.getConnessione().timer(tempo);
+                }
             } catch (Exception e) {
                 log(e);
             }
@@ -97,11 +99,11 @@ public class PannelloPrincipale extends JPanel {
         add(accendi);
         add(timer);
         add(impostazioni);
-        Y += d(50);
+        y += d(50);
 
         win10AccentDisegnati = Configurazione.getMostraWin10();
-        winAccent.setBounds(d(10), Y, d(250), d(40));
-        seguiWinAccent.setBounds(d(270), Y, d(250), d(40));
+        winAccent.setBounds(d(10), y, d(250), d(40));
+        seguiWinAccent.setBounds(d(270), y, d(250), d(40));
         winAccent.setFocusable(false);
         seguiWinAccent.setFocusable(false);
         winAccent.addActionListener(click -> ref.cambiaColoreDaAccent());
@@ -110,28 +112,28 @@ public class PannelloPrincipale extends JPanel {
         add(seguiWinAccent);
 
         if (win10AccentDisegnati) {
-            Y += d(50);
+            y += d(50);
         } else {
             winAccent.setVisible(false);
             seguiWinAccent.setVisible(false);
         }
 
-        seguiSchermo.setBounds(d(10), Y, d(250), d(40));
+        seguiSchermo.setBounds(d(10), y, d(250), d(40));
         seguiSchermo.addActionListener(click -> ref.seguiColoreSchermo());
         seguiSchermo.setFocusable(false);
         add(seguiSchermo);
 
-        animazioni.setBounds(d(270), Y, d(250), d(40));
+        animazioni.setBounds(d(270), y, d(250), d(40));
         animazioni.setFocusable(false);
         animazioni.addActionListener(click -> ref.apriPannelloAnimazioni());
         add(animazioni);
-        Y += d(70);
+        y += d(70);
 
-        descLuce.setBounds(d(10), Y, d(510), d(40));
+        descLuce.setBounds(d(10), y, d(510), d(40));
         descLuce.setOpaque(false);
         add(descLuce);
-        Y += d(40);
-        luminosita.setBounds(d(10), Y, d(510), d(40));
+        y += d(40);
+        luminosita.setBounds(d(10), y, d(510), d(40));
         luminosita.setBackground(Main.trasparente);
         luminosita.setForeground(Color.WHITE);
         luminosita.setMaximum(100);
@@ -145,11 +147,11 @@ public class PannelloPrincipale extends JPanel {
         luminosita.addChangeListener(eventoJSlider(e -> ref.getConnessione().setBr(Math.max(luminosita.getValue(), 1))));
         luminosita.setOpaque(false);
         add(luminosita);
-        Y += d(40);
-        descTemp.setBounds(d(10), Y, d(510), d(40));
+        y += d(40);
+        descTemp.setBounds(d(10), y, d(510), d(40));
         add(descTemp);
-        Y += d(40);
-        temperatura.setBounds(d(10), Y, d(510), d(40));
+        y += d(40);
+        temperatura.setBounds(d(10), y, d(510), d(40));
         temperatura.setBackground(Main.trasparente);
         temperatura.setForeground(Color.WHITE);
         temperatura.setOpaque(false);
@@ -164,12 +166,12 @@ public class PannelloPrincipale extends JPanel {
         temperatura.addChangeListener(s -> aggiornaAnteprima());
         temperatura.addChangeListener(eventoJSlider(e -> ref.getConnessione().temperatura(temperatura.getValue())));
         add(temperatura);
-        Y += d(40);
-        descCol.setBounds(d(10), Y, d(510), d(40));
+        y += d(40);
+        descCol.setBounds(d(10), y, d(510), d(40));
         add(descCol);
-        Y += d(40);
-        hue.setBounds(d(10), Y, d(250), d(40));
-        sat.setBounds(d(270), Y, d(250), d(40));
+        y += d(40);
+        hue.setBounds(d(10), y, d(250), d(40));
+        sat.setBounds(d(270), y, d(250), d(40));
         hue.setBackground(Main.trasparente);
         hue.setForeground(Color.WHITE);
         sat.setBackground(Main.trasparente);
@@ -188,13 +190,13 @@ public class PannelloPrincipale extends JPanel {
         sat.addChangeListener(s -> aggiornaAnteprima());
         hue.addChangeListener(eventoJSlider(e -> ref.getConnessione().setHS(hue.getValue(), sat.getValue())));
         sat.addChangeListener(eventoJSlider(e -> ref.getConnessione().setHS(hue.getValue(), sat.getValue())));
-        Y += d(50);
-        anteprima.setBounds(d(10), Y, d(510), d(20));
+        y += d(50);
+        anteprima.setBounds(d(10), y, d(510), d(20));
         anteprima.setFocusable(false);
         aggiornaAnteprima();
         add(anteprima);
-        Y += d(30);
-        setSize(d(530), Y);
+        y += d(30);
+        setSize(d(530), y);
         setVisible(true);
     }
 

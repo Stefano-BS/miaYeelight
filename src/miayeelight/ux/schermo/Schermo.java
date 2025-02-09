@@ -51,6 +51,7 @@ public class Schermo implements Serializable {
         return avg;
     }
 
+    @SuppressWarnings("java:S2140")
     public static Color ottieniMedia(int punti, double peso, double varianza) {
         int r = 0;
         int g = 0;

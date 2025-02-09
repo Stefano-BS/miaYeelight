@@ -32,7 +32,7 @@ public class PannelloAnimazioni extends JPanel {
     private final JButton salvaAnimazione = new JButton(Strings.get(PannelloAnimazioni.class, "5"));
     private final JLabel[] intestazione = {new JLabel(Strings.get(PannelloAnimazioni.class, "0")), new JLabel(Strings.get(PannelloAnimazioni.class, "1")), new JLabel(Strings.get(PannelloAnimazioni.class, "2")), new JLabel(Strings.get(PannelloAnimazioni.class, "3"))};
     private AnteprimaAnimazione anteprima;
-    private int Y = d(10);
+    private int vPos = d(10);
 
     transient DocumentListener listenerCambioTempi = new DocumentListener() {
         public void changedUpdate(DocumentEvent a) {
@@ -71,10 +71,10 @@ public class PannelloAnimazioni extends JPanel {
         setBackground(Main.bg);
         caricaAnimazione.setFocusable(false);
         salvaAnimazione.setFocusable(false);
-        caricaAnimazione.setBounds(d(10), Y, d(250), d(40));
+        caricaAnimazione.setBounds(d(10), vPos, d(250), d(40));
         caricaAnimazione.addActionListener(this::caricaAnimazione);
         add(caricaAnimazione);
-        salvaAnimazione.setBounds(d(270), Y, d(250), d(40));
+        salvaAnimazione.setBounds(d(270), vPos, d(250), d(40));
         salvaAnimazione.addActionListener(click -> {
             FileDialog picker = new FileDialog((Frame) null);
             picker.setTitle(Strings.get(PannelloAnimazioni.class, "16"));
@@ -96,20 +96,20 @@ public class PannelloAnimazioni extends JPanel {
             }
         });
         add(salvaAnimazione);
-        Y += d(50);
-        intestazione[0].setBounds(d(10), Y, d(80), d(40));
+        vPos += d(50);
+        intestazione[0].setBounds(d(10), vPos, d(80), d(40));
         intestazione[0].setHorizontalAlignment(SwingConstants.CENTER);
-        intestazione[1].setBounds(d(80), Y, d(80), d(40));
+        intestazione[1].setBounds(d(80), vPos, d(80), d(40));
         intestazione[1].setHorizontalAlignment(SwingConstants.CENTER);
-        intestazione[2].setBounds(d(210), Y, d(80), d(40));
+        intestazione[2].setBounds(d(210), vPos, d(80), d(40));
         intestazione[2].setHorizontalAlignment(SwingConstants.CENTER);
-        intestazione[3].setBounds(d(320), Y, d(80), d(40));
+        intestazione[3].setBounds(d(320), vPos, d(80), d(40));
         intestazione[3].setHorizontalAlignment(SwingConstants.CENTER);
         add(intestazione[0]);
         add(intestazione[1]);
         add(intestazione[2]);
         add(intestazione[3]);
-        Y += d(50);
+        vPos += d(50);
         tempi.add(new JTextField());
         tempi.get(0).setText("1000");
         colori.add(new JSlider[]{Slider.fab(Slider.PRESETLUM), Slider.fab(Slider.PRESETTON), Slider.fab(Slider.PRESETSAT)});
@@ -127,10 +127,10 @@ public class PannelloAnimazioni extends JPanel {
         colori.get(0)[2].addChangeListener(sl -> aggiornaAnteprima());
         disegna();
         anteprima = new AnteprimaAnimazione(ottieniValori());
-        anteprima.setBounds(d(10), Y, d(510), d(40));
+        anteprima.setBounds(d(10), vPos, d(510), d(40));
         add(anteprima);
-        Y += d(50);
-        avviaAnimazione.setBounds(d(10), Y, d(250), d(40));
+        vPos += d(50);
+        avviaAnimazione.setBounds(d(10), vPos, d(250), d(40));
         avviaAnimazione.addActionListener(click -> {
             int[][] valori = new int[tempi.size()][4];
             for (int i = 0; i < valori.length; i++) {
@@ -143,15 +143,15 @@ public class PannelloAnimazioni extends JPanel {
             }
             ref.getConnessione().animazione(valori);
         });
-        torna.setBounds(d(270), Y, d(250), d(40));
+        torna.setBounds(d(270), vPos, d(250), d(40));
         torna.setFocusable(false);
         avviaAnimazione.setFocusable(false);
         torna.addActionListener(click -> ref.tornaStatico());
-        Y += d(50);
+        vPos += d(50);
         add(avviaAnimazione);
         add(torna);
-        setSize(new Dimension(d(530), Y));
-        setPreferredSize(new Dimension(d(530), Y));
+        setSize(new Dimension(d(530), vPos));
+        setPreferredSize(new Dimension(d(530), vPos));
         setVisible(true);
     }
 
@@ -236,22 +236,22 @@ public class PannelloAnimazioni extends JPanel {
 
     private void disegna() {
         for (int i = 0; i < tempi.size(); i++) {
-            tempi.get(i).setBounds(d(10), Y, d(80), d(40));
+            tempi.get(i).setBounds(d(10), vPos, d(80), d(40));
             tempi.get(i).setHorizontalAlignment(SwingConstants.CENTER);
-            colori.get(i)[0].setBounds(d(100), Y, d(100), d(40));
+            colori.get(i)[0].setBounds(d(100), vPos, d(100), d(40));
             colori.get(i)[0].setMinimum(0);
             colori.get(i)[0].setMaximum(100);
-            colori.get(i)[1].setBounds(d(210), Y, d(100), d(40));
+            colori.get(i)[1].setBounds(d(210), vPos, d(100), d(40));
             colori.get(i)[1].setMinimum(0);
             colori.get(i)[1].setMaximum(359);
-            colori.get(i)[2].setBounds(d(320), Y, d(100), d(40));
+            colori.get(i)[2].setBounds(d(320), vPos, d(100), d(40));
             colori.get(i)[2].setMinimum(0);
             colori.get(i)[2].setMaximum(100);
             colori.get(i)[0].setBackground(Main.trasparente);
             colori.get(i)[1].setBackground(Main.trasparente);
             colori.get(i)[2].setBackground(Main.trasparente);
-            aggiuntori.get(i).setBounds(d(430), Y, d(40), d(40));
-            rimovitori.get(i).setBounds(d(480), Y, d(40), d(40));
+            aggiuntori.get(i).setBounds(d(430), vPos, d(40), d(40));
+            rimovitori.get(i).setBounds(d(480), vPos, d(40), d(40));
             //Rimuovi il listener associato precedentemente perché potrebbe contenere un indice ora errato
             if (aggiuntori.get(i).getActionListeners().length != 0) {
                 aggiuntori.get(i).removeActionListener(aggiuntori.get(i).getActionListeners()[0]);
@@ -265,23 +265,23 @@ public class PannelloAnimazioni extends JPanel {
 
             aggiuntori.get(i).setFocusable(false);
             rimovitori.get(i).setFocusable(false);
-            Y += d(50);
+            vPos += d(50);
         }
     }
 
     void ridisegna() {
-        Y = d(100);
+        vPos = d(100);
         disegna();
         if (anteprima != null) {
-            anteprima.setBounds(d(10), Y, d(510), d(40));
-            Y += d(50);
+            anteprima.setBounds(d(10), vPos, d(510), d(40));
+            vPos += d(50);
         }
-        avviaAnimazione.setBounds(d(10), Y, d(250), d(40));
-        torna.setBounds(d(270), Y, d(250), d(40));
-        Y += d(50);
-        setSize(new Dimension(d(530), Y));
-        setPreferredSize(new Dimension(d(530), Y));
-        ref.getFrame().setSize(d(530), d(40) + Y);
+        avviaAnimazione.setBounds(d(10), vPos, d(250), d(40));
+        torna.setBounds(d(270), vPos, d(250), d(40));
+        vPos += d(50);
+        setSize(new Dimension(d(530), vPos));
+        setPreferredSize(new Dimension(d(530), vPos));
+        ref.getFrame().setSize(d(530), d(40) + vPos);
         ref.getFrame().revalidate();
     }
 
@@ -371,13 +371,14 @@ public class PannelloAnimazioni extends JPanel {
         }
 
         @Override
+        @SuppressWarnings("java:S3358")
         protected void paintComponent(Graphics g) {
             if (v == null || v.length == 0) {
                 return;
             }
 
             int tempo = 0;
-            int X = 0;
+            int orizPos = 0;
             int xPost = 0;
 
             for (int[] i : v) {
@@ -403,15 +404,15 @@ public class PannelloAnimazioni extends JPanel {
                     br2 = v[s + 1][1];
                 }
 
-                for (int x = X; x <= xPost; x++) {
-                    float p = (float) (x - X) / (xPost - X); //percentuale gradiente attuale
+                for (int x = orizPos; x <= xPost; x++) {
+                    float p = (float) (x - orizPos) / (xPost - orizPos); //percentuale gradiente attuale
                     g.setColor(Color.getHSBColor( //
                             (hue2 > hue1 ? (hue2 - hue1 < 180 ? (hue1 * (1 - p) + hue2 * p) : (hue1 - (hue1 + 360 - hue2) * p > 0 ? hue1 - (hue1 + 360 - hue2) * p : 360 + hue1 - (hue1 + 360 - hue2) * p)) : (hue1 - hue2 < 180 ? (hue1 * (1 - p) + hue2 * p) : (hue1 + (hue2 + 360 - hue1) * p > 359 ? hue1 + (hue2 + 360 - hue1) * p - 360 : hue1 + (hue2 + 360 - hue1) * p))) / 360, //
                             (sat1 * (1 - p) + sat2 * p) / 100, (br1 * (1 - p) + br2 * p) / 100));
 
                     g.drawLine(x, 0, x, d(40));
                 }
-                X = xPost;
+                orizPos = xPost;
             }
         }
     }

@@ -19,9 +19,13 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
 import static miayeelight.Configurazione.LANG;
+import static miayeelight.Configurazione.LOG;
 import static miayeelight.ux.schermo.Schermo.d;
 
 public class Main implements Serializable {
@@ -29,9 +33,12 @@ public class Main implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
+
     public final Font caratterePiccolo;
     public final Font carattereMedio;
     public final Font carattereGrande;
+
     private static final Color sh1 = new Color(40, 40, 40, 255);
     public static final Color bg = new Color(0, 0, 0, 255);
     public static final Color trasparente = new Color(0, 0, 0, 0);
@@ -72,7 +79,9 @@ public class Main implements Serializable {
         frame.setTitle(nomeLampadina);
         frame.setResizable(false);
         frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
-        frame.setIconImage(yee.getImage());
+        if (yee != null) {
+            frame.setIconImage(yee.getImage());
+        }
         frame.setBackground(new Color(0, 0, 0, 0));
         rosso = new BarraTitolo(this, yee);
         rosso.setBounds(0, 0, d(530), d(40));
@@ -80,13 +89,11 @@ public class Main implements Serializable {
         pannelloConnessione = new PannelloConnessione(this, true);
         frame.getContentPane().add(pannelloConnessione, BorderLayout.CENTER);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int screenW = (int) (screenSize.getWidth());
-        int screenH = (int) (screenSize.getHeight());
-        frame.setBounds(screenW / 2 - 265, screenH / 2 - pannelloConnessione.getHeight(), rosso.getWidth(), rosso.getHeight() + pannelloConnessione.getHeight());
+        frame.setBounds(screenSize.width / 2 - d(265), screenSize.height / 2 - (pannelloConnessione.getHeight() + rosso.getHeight()), d(530), rosso.getHeight() + pannelloConnessione.getHeight());
 
         connessione = new Connessione(this);
-        if (connessione.connetti()) {
-            String[] proprieta = connessione.scaricaProprieta();
+        if (connessione.connetti(true)) {
+            final String[] proprieta = connessione.scaricaProprieta();
             tornaStatico();
             configuraPannelloPrincipaleConStatoLampada(proprieta);
             schedulaExtListener();
@@ -223,11 +230,6 @@ public class Main implements Serializable {
         pannello.getLuminosita().setValue((int) (hsbVals[2] * 100));
         pannello.setModoDiretto(modoPrima);
         connessione.setHS((int) (hsbVals[0] * 360), (int) (hsbVals[1] * 70 + 30));
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            log(e);
-        }
         connessione.setBr((int) (hsbVals[2] * 100));
     }
 
@@ -251,7 +253,7 @@ public class Main implements Serializable {
         }
     }
 
-    ImageIcon caricaIcona() {
+    private ImageIcon caricaIcona() {
         try {
             return new ImageIcon(ImageIO.read(Objects.requireNonNull(Main.class.getResource("yee.png"))).getScaledInstance(d(40), d(40), Image.SCALE_SMOOTH));
         } catch (Exception e) {
@@ -261,11 +263,20 @@ public class Main implements Serializable {
     }
 
     public static void log(final Exception e) {
-        e.printStackTrace();
+        switch (Configurazione.get(LOG)) {
+            case "console":
+                LOGGER.log(Level.WARNING, () -> e.toString() + "\n" + Arrays.stream(e.getStackTrace()).map(Object::toString).collect(Collectors.joining("\n")));
+                break;
+            case "messaggio":
+                JOptionPane.showMessageDialog(null, e.toString() + "\n" + Arrays.stream(e.getStackTrace()).limit(15).map(Object::toString).collect(Collectors.joining("\n")), Strings.get(Main.class, "1"), JOptionPane.ERROR_MESSAGE);
+                break;
+            default:
+                break;
+        }
     }
 
     public static void log(final String log) {
-        System.out.println(log);
+        LOGGER.log(Level.INFO, log);
     }
 
     private void configuraUIManager() {

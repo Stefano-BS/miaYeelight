@@ -151,6 +151,7 @@ public class Slider extends BasicSliderUI {
         g.fillRoundRect(thumbRect.x, thumbRect.y, thumbRect.width, thumbRect.height, d(5), d(5));
     }
 
+    @SuppressWarnings("java:S3358")
     private Color coloreTema() {
         if (preset == PRESETDEFAULT) {
             return (cBarraSx);
