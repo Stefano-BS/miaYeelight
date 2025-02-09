@@ -25,7 +25,7 @@ public class PannelloPrincipale extends JPanel {
     private final JButton winAccent = new JButton(Strings.get(PannelloPrincipale.class, "4"));
     private final JButton animazioni = new JButton(Strings.get(PannelloPrincipale.class, "5"));
     private final JButton timer = new JButton(Strings.get(PannelloPrincipale.class, "1"));
-    private final JSlider luminosita = Slider.fab(Slider.PRESETLUM);
+    private final JSlider lum = Slider.fab(Slider.PRESETLUM);
     private final JSlider hue = Slider.fab(Slider.PRESETTON);
     private final JSlider sat = Slider.fab(Slider.PRESETSAT);
     private final JSlider temperatura = Slider.fab(Slider.PRESETCT);
@@ -34,7 +34,7 @@ public class PannelloPrincipale extends JPanel {
     private final JLabel descTemp;
     private final JLabel descCol;
     private final Main ref;
-    private Timer crovescia = null;
+    private Timer cRovescia = null;
     private boolean modoDiretto = true;
     private boolean ultimaModalita = false; // false: T, true: C
     private boolean win10AccentDisegnati;
@@ -133,20 +133,20 @@ public class PannelloPrincipale extends JPanel {
         descLuce.setOpaque(false);
         add(descLuce);
         y += d(40);
-        luminosita.setBounds(d(10), y, d(510), d(40));
-        luminosita.setBackground(Main.trasparente);
-        luminosita.setForeground(Color.WHITE);
-        luminosita.setMaximum(100);
-        luminosita.setMinimum(0);
-        luminosita.setMajorTickSpacing(10);
-        luminosita.setMinorTickSpacing(5);
-        luminosita.setPaintTicks(true);
-        luminosita.addChangeListener(s -> descLuce.setText(Strings.get(PannelloPrincipale.class, "16") + luminosita.getValue() + "%"));
-        luminosita.addChangeListener(s -> aggiornaAnteprima());
-        luminosita.addChangeListener(s -> aggiornaAnteprima());
-        luminosita.addChangeListener(eventoJSlider(e -> ref.getConnessione().setBr(Math.max(luminosita.getValue(), 1))));
-        luminosita.setOpaque(false);
-        add(luminosita);
+        lum.setBounds(d(10), y, d(510), d(40));
+        lum.setBackground(Main.trasparente);
+        lum.setForeground(Color.WHITE);
+        lum.setMaximum(100);
+        lum.setMinimum(0);
+        lum.setMajorTickSpacing(10);
+        lum.setMinorTickSpacing(5);
+        lum.setPaintTicks(true);
+        lum.addChangeListener(s -> descLuce.setText(Strings.get(PannelloPrincipale.class, "16") + lum.getValue() + "%"));
+        lum.addChangeListener(s -> aggiornaAnteprima());
+        lum.addChangeListener(s -> aggiornaAnteprima());
+        lum.addChangeListener(eventoJSlider(e -> ref.getConnessione().setBr(Math.max(lum.getValue(), 1))));
+        lum.setOpaque(false);
+        add(lum);
         y += d(40);
         descTemp.setBounds(d(10), y, d(510), d(40));
         add(descTemp);
@@ -202,12 +202,12 @@ public class PannelloPrincipale extends JPanel {
 
     public void aggiornaAnteprima() {
         if (ultimaModalita) {
-            anteprima.setBackground(new Color(Color.HSBtoRGB(((float) hue.getValue()) / 359, ((float) sat.getValue()) / 100, ((float) (luminosita.getValue() > 80 ? 100 : luminosita.getValue() + 20)) / 100)));
+            anteprima.setBackground(new Color(Color.HSBtoRGB(((float) hue.getValue()) / 359, ((float) sat.getValue()) / 100, ((float) (lum.getValue() > 80 ? 100 : lum.getValue() + 20)) / 100)));
         } else {
             anteprima.setBackground(new Color( //
-                    (int) (200 * (luminosita.getValue() > 50 ? 1 : 0.5 + (float) luminosita.getValue() / 100)), //
-                    (int) (((double) temperatura.getValue() / 37 + 75) * (luminosita.getValue() > 50 ? 1 : 0.5 + (float) luminosita.getValue() / 100)), //
-                    (int) ((temperatura.getValue() - 1700) / 18.8f * (luminosita.getValue() > 50 ? 1 : 0.5 + (float) luminosita.getValue() / 100))));
+                    (int) (200 * (lum.getValue() > 50 ? 1 : 0.5 + (float) lum.getValue() / 100)), //
+                    (int) (((double) temperatura.getValue() / 37 + 75) * (lum.getValue() > 50 ? 1 : 0.5 + (float) lum.getValue() / 100)), //
+                    (int) ((temperatura.getValue() - 1700) / 18.8f * (lum.getValue() > 50 ? 1 : 0.5 + (float) lum.getValue() / 100))));
         }
     }
 
@@ -216,14 +216,14 @@ public class PannelloPrincipale extends JPanel {
             if (!modoDiretto) {
                 return;
             }
-            if (crovescia == null) {
-                crovescia = new Timer(200, azione);
-            } else if (crovescia.isRunning()) {
-                crovescia.stop();
-                crovescia = new Timer(200, azione);
+            if (cRovescia == null) {
+                cRovescia = new Timer(200, azione);
+            } else if (cRovescia.isRunning()) {
+                cRovescia.stop();
+                cRovescia = new Timer(200, azione);
             }
-            crovescia.setRepeats(false);
-            crovescia.start();
+            cRovescia.setRepeats(false);
+            cRovescia.start();
         };
     }
 
@@ -236,7 +236,7 @@ public class PannelloPrincipale extends JPanel {
     }
 
     public void riscriviEtichette() {
-        descLuce.setText(Strings.get(PannelloPrincipale.class, "16") + luminosita.getValue() + "%");
+        descLuce.setText(Strings.get(PannelloPrincipale.class, "16") + lum.getValue() + "%");
         descTemp.setText(Strings.get(PannelloPrincipale.class, "18") + temperatura.getValue() + "K");
         descCol.setText(Strings.get(PannelloPrincipale.class, "8"));
         accendi.setText(accendi.getText().contains("\uD83D\uDCA1") ? Strings.get(PannelloPrincipale.class, "0") : Strings.get(PannelloPrincipale.class, "12"));
@@ -292,10 +292,6 @@ public class PannelloPrincipale extends JPanel {
         return seguiWinAccent;
     }
 
-    public JButton getWinAccent() {
-        return winAccent;
-    }
-
     public JSlider getHue() {
         return hue;
     }
@@ -312,8 +308,8 @@ public class PannelloPrincipale extends JPanel {
         return seguiSchermo;
     }
 
-    public JSlider getLuminosita() {
-        return luminosita;
+    public JSlider getLum() {
+        return lum;
     }
 
     public JSlider getTemperatura() {
@@ -324,8 +320,8 @@ public class PannelloPrincipale extends JPanel {
         return accendi;
     }
 
-    public Timer getCrovescia() {
-        return crovescia;
+    public Timer getcRovescia() {
+        return cRovescia;
     }
 
 }

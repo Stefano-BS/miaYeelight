@@ -12,7 +12,7 @@ While connected the application periodically asks the lamp for its status in ord
 
 The lamp can be commanded in both CT (ColorTemperature) and HSB (HueSaturationBrightness) modes. Note that the Yeelight does not accept every possible RGB value (colors too dark are not accepted).
 
-While you can configure the lamp to bright a single color, you can also set up a free flow of colors, by creating a new **animation**. An animation is defined by a list of tuples of: duration (the number of milliseconds that the step takes), hue, saturation, brightness (a the beginning of the step). You can add and remove freely the steps, but keep in mind that the lamp has some limitations in flow mode (which derive from the lamp itself, not from this app):
+While you can configure the lamp to bright a single color, you can also set up a free flow of colors, by creating a new **animation**. An animation is defined by a list of tuples of: duration (the number of milliseconds that the step takes), hue, saturation, brightness (at the beginning of the step). You can add and remove freely the steps, but keep in mind that the lamp has some limitations in flow mode (which derive from the lamp itself, not from this app):
 - in flow mode, HSB mode is not supported (the user's asked for HSB values for user-friendliness, but then the values are converted in RGB). As a result more combinations of colors cannot be reproduced, especially colors too dark and not enough saturated;
 - the minimum time of a step is 50 milliseconds (which is quite fast);
 - there's a limit in the number of steps you can make the lamp follow.

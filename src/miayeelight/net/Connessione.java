@@ -103,11 +103,10 @@ public class Connessione implements Serializable {
             }
             ref.getPannelloConnessione().setTestoDescrizione("");
             JOptionPane.showMessageDialog(null, messaggio, Strings.get(Connessione.class, "3"), JOptionPane.ERROR_MESSAGE, ref.yee);
-            return false;
         } else {
             codaTentativi.addFirst(new IndirizzoConnessione(ip, 2000));
-            return false;
         }
+        return false;
     }
 
     private boolean tentaConnessione(final IndirizzoConnessione i) throws IOException {
@@ -165,6 +164,7 @@ public class Connessione implements Serializable {
         invia("{\"id\":0,\"method\":\"set_ct_abx\",\"params\":[" + kelvin + ",\"smooth\",500]}");
     }
 
+    @SuppressWarnings("unused")
     public void setRGB(int r, int g, int b) {
         invia("{\"id\":0,\"method\":\"set_rgb\",\"params\":[" + (r * 65536 + g * 256 + b) + "]}");
     }

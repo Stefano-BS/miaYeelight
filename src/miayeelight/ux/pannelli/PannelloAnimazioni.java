@@ -33,8 +33,9 @@ public class PannelloAnimazioni extends JPanel {
     private final JLabel[] intestazione = {new JLabel(Strings.get(PannelloAnimazioni.class, "0")), new JLabel(Strings.get(PannelloAnimazioni.class, "1")), new JLabel(Strings.get(PannelloAnimazioni.class, "2")), new JLabel(Strings.get(PannelloAnimazioni.class, "3"))};
     private AnteprimaAnimazione anteprima;
     private int vPos = d(10);
+    private final Main ref;
 
-    transient DocumentListener listenerCambioTempi = new DocumentListener() {
+    private final transient DocumentListener listenerCambioTempi = new DocumentListener() {
         public void changedUpdate(DocumentEvent a) {
             aggiorna(a);
         }
@@ -61,8 +62,6 @@ public class PannelloAnimazioni extends JPanel {
             }
         }
     };
-
-    Main ref;
 
     public PannelloAnimazioni(Main ref) {
         super();
@@ -309,8 +308,8 @@ public class PannelloAnimazioni extends JPanel {
     }
 
     private class LambdaAnimazione implements ActionListener {
-        boolean tipo;
-        int riga;
+        final boolean tipo;
+        final int riga;
 
         LambdaAnimazione(boolean tipologia, int riga) {
             tipo = tipologia;
@@ -378,15 +377,16 @@ public class PannelloAnimazioni extends JPanel {
             }
 
             int tempo = 0;
-            int orizPos = 0;
-            int xPost = 0;
-
             for (int[] i : v) {
                 tempo += i[0];
             }
 
+            float orizPos = 0;
+            float xPost;
+
             for (int s = 0; s < v.length; s++) {
-                xPost += (int) ((float) (v[s][0]) / tempo * d(510));
+                xPost = Math.round(orizPos + ((float) v[s][0] / tempo * d(510)));
+
                 float hue1 = v[s][2];
                 float sat1 = v[s][3];
                 float br1 = v[s][1];
@@ -404,14 +404,14 @@ public class PannelloAnimazioni extends JPanel {
                     br2 = v[s + 1][1];
                 }
 
-                for (int x = orizPos; x <= xPost; x++) {
-                    float p = (float) (x - orizPos) / (xPost - orizPos); //percentuale gradiente attuale
-                    g.setColor(Color.getHSBColor( //
-                            (hue2 > hue1 ? (hue2 - hue1 < 180 ? (hue1 * (1 - p) + hue2 * p) : (hue1 - (hue1 + 360 - hue2) * p > 0 ? hue1 - (hue1 + 360 - hue2) * p : 360 + hue1 - (hue1 + 360 - hue2) * p)) : (hue1 - hue2 < 180 ? (hue1 * (1 - p) + hue2 * p) : (hue1 + (hue2 + 360 - hue1) * p > 359 ? hue1 + (hue2 + 360 - hue1) * p - 360 : hue1 + (hue2 + 360 - hue1) * p))) / 360, //
-                            (sat1 * (1 - p) + sat2 * p) / 100, (br1 * (1 - p) + br2 * p) / 100));
+                for (int x = (int) orizPos; x < (int) xPost; x++) {
+                    float p = (x - orizPos) / (xPost - orizPos);
+                    final float hue = (hue2 > hue1 ? (hue2 - hue1 < 180 ? (hue1 * (1 - p) + hue2 * p) : (hue1 - (hue1 + 360 - hue2) * p > 0 ? hue1 - (hue1 + 360 - hue2) * p : 360 + hue1 - (hue1 + 360 - hue2) * p)) : (hue1 - hue2 < 180 ? (hue1 * (1 - p) + hue2 * p) : (hue1 + (hue2 + 360 - hue1) * p > 359 ? hue1 + (hue2 + 360 - hue1) * p - 360 : hue1 + (hue2 + 360 - hue1) * p))) / 360;
+                    g.setColor(Color.getHSBColor(hue, (sat1 * (1 - p) + sat2 * p) / 100, (br1 * (1 - p) + br2 * p) / 100));
 
-                    g.drawLine(x, 0, x, d(40));
+                    g.fillRect(x, 0, 1, d(40));
                 }
+
                 orizPos = xPost;
             }
         }

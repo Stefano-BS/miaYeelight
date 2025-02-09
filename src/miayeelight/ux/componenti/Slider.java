@@ -39,19 +39,6 @@ public class Slider extends BasicSliderUI {
         b.setBackground(Color.black);
     }
 
-    public static JSlider fab() {
-        return new JSlider() {
-
-            @Serial
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void updateUI() {
-                setUI(new Slider(this));
-            }
-        };
-    }
-
     public static JSlider fab(int preset) {
         JSlider fab = new JSlider() {
 

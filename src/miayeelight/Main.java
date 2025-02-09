@@ -114,7 +114,7 @@ public class Main implements Serializable {
         if (statoIniziale[0].equals("on")) {
             pannello.getAccendi().setText(Strings.get(PannelloPrincipale.class, "12"));
         }
-        pannello.getLuminosita().setValue(Integer.parseInt(statoIniziale[1]));
+        pannello.getLum().setValue(Integer.parseInt(statoIniziale[1]));
         pannello.getTemperatura().setValue(Integer.parseInt(statoIniziale[5]));
         pannello.getHue().setValue(Integer.parseInt(statoIniziale[3]));
         pannello.getSat().setValue(Integer.parseInt(statoIniziale[4]));
@@ -183,7 +183,7 @@ public class Main implements Serializable {
     public void schedulaExtListener() {
         extList.schedule(new TimerTask() {
             public void run() {
-                if (Arrays.asList(frame.getContentPane().getComponents()).contains(pannello) && (pannello.getCrovescia() == null || !pannello.getCrovescia().isRunning()) && aggiornatoreSchermo == null) {
+                if (Arrays.asList(frame.getContentPane().getComponents()).contains(pannello) && (pannello.getcRovescia() == null || !pannello.getcRovescia().isRunning()) && aggiornatoreSchermo == null) {
                     boolean modoPrima = pannello.getModoDiretto();
                     pannello.setModoDiretto(false);
                     configuraPannelloPrincipaleConStatoLampada(connessione.scaricaProprieta());
@@ -227,7 +227,7 @@ public class Main implements Serializable {
         pannello.setModoDiretto(false);
         pannello.getHue().setValue((int) (hsbVals[0] * 360));
         pannello.getSat().setValue((int) (hsbVals[1] * 70 + 30));
-        pannello.getLuminosita().setValue((int) (hsbVals[2] * 100));
+        pannello.getLum().setValue((int) (hsbVals[2] * 100));
         pannello.setModoDiretto(modoPrima);
         connessione.setHS((int) (hsbVals[0] * 360), (int) (hsbVals[1] * 70 + 30));
         connessione.setBr((int) (hsbVals[2] * 100));
