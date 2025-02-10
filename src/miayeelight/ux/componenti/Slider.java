@@ -7,6 +7,7 @@ import java.awt.geom.RoundRectangle2D;
 import java.io.Serial;
 
 import static javax.swing.SwingConstants.HORIZONTAL;
+import static miayeelight.ux.schermo.Schermo.coloreDaTemperatura;
 import static miayeelight.ux.schermo.Schermo.d;
 
 public class Slider extends BasicSliderUI {
@@ -22,7 +23,6 @@ public class Slider extends BasicSliderUI {
     private static final Color cBordoBarraDefault = new Color(170, 170, 170);
     private static final Color cBarraSxDefault = Color.red.darker().darker();
 
-    private static final Color cManopola = cManopolaDefault;
     private static final Color cBarra = cBarraDefault;
     private static final Color cBordoBarra = cBordoBarraDefault;
     private static final Color cBarraSx = cBarraSxDefault;
@@ -130,36 +130,28 @@ public class Slider extends BasicSliderUI {
 
     @Override
     public void paintThumb(final Graphics g) {
-        if (preset == PRESETDEFAULT) {
-            g.setColor(cManopola);
-        } else {
-            g.setColor(coloreTema().brighter());
-        }
+        final double p = Math.min((double) thumbRect.x / trackRect.width, 1.0);
+
+        g.setColor(switch (preset) {
+            case PRESETCT -> coloreDaTemperatura(p * 100, 1);
+            case PRESETLUM -> new Color(80 + (int) (p * 175), 80 + (int) (p * 175), 80 + (int) (p * 175));
+            case PRESETSAT -> new Color(115 + (int) (p * 140), 115 - (int) (p * 115), 115 - (int) (p * 115));
+            case PRESETTON -> Color.getHSBColor((float) p, 0.6f, 1);
+            default -> cManopolaDefault;
+        });
         g.fillRoundRect(thumbRect.x, thumbRect.y, thumbRect.width, thumbRect.height, d(5), d(5));
     }
 
-    @SuppressWarnings("java:S3358")
     private Color coloreTema() {
-        if (preset == PRESETDEFAULT) {
-            return (cBarraSx);
-        }
-        double p = Math.min((double) thumbRect.x / trackRect.width, 1.0);
-        if (preset == PRESETCT) {
-            return new Color(100 + (int) (100 * (1 - p)), 100 + (int) (60 * p), 50 + (int) (100 * p));
-        }
-        if (preset == PRESETLUM) {
-            return new Color(60 + (int) (p * 195), 40 + (int) (p * 160), 40 + (int) (p * 160));
-        }
-        if (preset == PRESETTON) {
-            return new Color( //
-                    p < 0.17 ? 255 : p < 0.34 ? (int) (255 * 5.9 * (0.34 - p)) : p < 0.67 ? 0 : p < 0.83 ? (int) (255 * 5.9 * (p - 0.66)) : 255, //
-                    p < 0.16 ? (int) (255 * 6 * p) : p < 0.5 ? 255 : p < 0.66 ? (int) (255 * 6 * (0.66 - p)) : 0, //
-                    p < 0.34 ? 0 : p < 0.5 ? (int) (255 * 6 * (p - 0.33)) : p < 0.84 ? 255 : (int) (255 * 6 * (1 - p)));
-        }
-        if (preset == PRESETSAT) {
-            return new Color(100 + (int) (p * 150), 100 - (int) (p * 100), 100 - (int) (p * 100));
-        }
-        return (cBarraSx);
+        final double p = Math.min((double) thumbRect.x / trackRect.width, 1.0);
+
+        return switch (preset) {
+            case PRESETCT -> coloreDaTemperatura(p * 100, 0.75);
+            case PRESETLUM -> new Color(50 + (int) (p * 170), 50 + (int) (p * 170), 50 + (int) (p * 170));
+            case PRESETSAT -> new Color(80 + (int) (p * 120), 80 - (int) (p * 80), 80 - (int) (p * 80));
+            case PRESETTON -> Color.getHSBColor((float) p, 1, 1);
+            default -> cBarraSx;
+        };
     }
 
     @Override

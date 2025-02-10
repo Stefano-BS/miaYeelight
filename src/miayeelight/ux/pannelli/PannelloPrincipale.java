@@ -12,6 +12,7 @@ import java.awt.event.ActionListener;
 import java.io.Serial;
 
 import static miayeelight.Main.log;
+import static miayeelight.ux.schermo.Schermo.coloreDaTemperatura;
 import static miayeelight.ux.schermo.Schermo.d;
 
 public class PannelloPrincipale extends JPanel {
@@ -204,10 +205,7 @@ public class PannelloPrincipale extends JPanel {
         if (ultimaModalita) {
             anteprima.setBackground(new Color(Color.HSBtoRGB(((float) hue.getValue()) / 359, ((float) sat.getValue()) / 100, ((float) (lum.getValue() > 80 ? 100 : lum.getValue() + 20)) / 100)));
         } else {
-            anteprima.setBackground(new Color( //
-                    (int) (200 * (lum.getValue() > 50 ? 1 : 0.5 + (float) lum.getValue() / 100)), //
-                    (int) (((double) temperatura.getValue() / 37 + 75) * (lum.getValue() > 50 ? 1 : 0.5 + (float) lum.getValue() / 100)), //
-                    (int) ((temperatura.getValue() - 1700) / 18.8f * (lum.getValue() > 50 ? 1 : 0.5 + (float) lum.getValue() / 100))));
+            anteprima.setBackground(coloreDaTemperatura((double) (temperatura.getValue() - 1700) / 48, ((double) lum.getValue()) / 100));
         }
     }
 

@@ -13,6 +13,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import static miayeelight.Main.log;
 import static miayeelight.ux.schermo.Schermo.d;
@@ -370,51 +371,59 @@ public class PannelloAnimazioni extends JPanel {
         }
 
         @Override
-        @SuppressWarnings("java:S3358")
         protected void paintComponent(Graphics g) {
             if (v == null || v.length == 0) {
                 return;
             }
 
-            int tempo = 0;
-            for (int[] i : v) {
-                tempo += i[0];
-            }
-
+            int tempoTotale = Arrays.stream(v).mapToInt(t -> t[0]).sum();
             float orizPos = 0;
-            float xPost;
 
             for (int s = 0; s < v.length; s++) {
-                xPost = Math.round(orizPos + ((float) v[s][0] / tempo * d(510)));
+                float xPost = Math.round(orizPos + ((float) v[s][0] / tempoTotale * d(510)));
 
-                float hue1 = v[s][2];
-                float sat1 = v[s][3];
-                float br1 = v[s][1];
+                final int coloreIniziale = Color.getHSBColor((float) v[s][2] / 360, (float) v[s][3] / 100, (float) v[s][1] / 100).getRGB();
+                final int coloreFinale = coloreFinale(s, v);
 
-                float hue2;
-                float sat2;
-                float br2;
-                if (s == v.length - 1) {
-                    hue2 = v[0][2];
-                    sat2 = v[0][3];
-                    br2 = v[0][1];
-                } else {
-                    hue2 = v[s + 1][2];
-                    sat2 = v[s + 1][3];
-                    br2 = v[s + 1][1];
-                }
+                final int rossoIniziale = coloreIniziale >> 16 & 0xFF;
+                final int verdeIniziale = coloreIniziale >> 8 & 0xFF;
+                final int bluIniziale = coloreIniziale & 0xFF;
+                final int rossoFinale = coloreFinale >> 16 & 0xFF;
+                final int verdeFinale = coloreFinale >> 8 & 0xFF;
+                final int bluFinale = coloreFinale & 0xFF;
 
                 for (int x = (int) orizPos; x < (int) xPost; x++) {
                     float p = (x - orizPos) / (xPost - orizPos);
-                    final float hue = (hue2 > hue1 ? (hue2 - hue1 < 180 ? (hue1 * (1 - p) + hue2 * p) : (hue1 - (hue1 + 360 - hue2) * p > 0 ? hue1 - (hue1 + 360 - hue2) * p : 360 + hue1 - (hue1 + 360 - hue2) * p)) : (hue1 - hue2 < 180 ? (hue1 * (1 - p) + hue2 * p) : (hue1 + (hue2 + 360 - hue1) * p > 359 ? hue1 + (hue2 + 360 - hue1) * p - 360 : hue1 + (hue2 + 360 - hue1) * p))) / 360;
-                    g.setColor(Color.getHSBColor(hue, (sat1 * (1 - p) + sat2 * p) / 100, (br1 * (1 - p) + br2 * p) / 100));
+                    final int rosso = (int) (rossoIniziale * (1 - p) + rossoFinale * p);
+                    final int verde = (int) (verdeIniziale * (1 - p) + verdeFinale * p);
+                    final int blu = (int) (bluIniziale * (1 - p) + bluFinale * p);
 
+                    g.setColor(new Color(rosso, verde, blu));
                     g.fillRect(x, 0, 1, d(40));
                 }
 
                 orizPos = xPost;
             }
         }
+
+        private int coloreFinale(int s, int[][] v) {
+            final float hue;
+            final float sat;
+            final float br;
+
+            if (s == v.length - 1) {
+                hue = v[0][2];
+                sat = v[0][3];
+                br = v[0][1];
+            } else {
+                hue = v[s + 1][2];
+                sat = v[s + 1][3];
+                br = v[s + 1][1];
+            }
+
+            return Color.getHSBColor(hue / 360, sat / 100, br / 100).getRGB();
+        }
+
     }
 
 }
