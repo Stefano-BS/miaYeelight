@@ -88,9 +88,9 @@ public class Schermo implements Serializable {
     }
 
     public static Color coloreDaTemperatura(final double k, final double luma) {
-        final double rosso = k <= 66 ? 255 : Math.min(255, Math.max(0, 329.698727446 * Math.pow(k - 60, -0.1332047592)));
-        final double verde = k <= 66 ? Math.min(255, Math.max(0, 99.4708025861 * Math.log(k + 15) - 161.1195681661)) : Math.min(255, Math.max(0, 288.1221695283 * Math.pow(k - 60, -0.0755148492)));
-        final double blu = k >= 66 ? 255 : Math.min(255, Math.max(0, 138.5177312231 * Math.log(k + 5) - 305.0447927307));
+        final double rosso = k <= 73 ? 255 : Math.min(255, 329.698727446 * Math.pow(k - 60, -0.1));
+        final double verde = k <= 71 ? Math.min(255, 99.4708025861 * Math.log(k + 15) - 161.1195681661) : 288.1221695283 * Math.pow(k - 60, -0.05);
+        final double blu = Math.min(255, Math.max(0, 138.5177312231 * Math.log(k + 5) - 305.0447927307));
 
         final double f = 0.4 + 0.6 * luma;
 

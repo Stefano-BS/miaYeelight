@@ -110,6 +110,7 @@ public class Connessione implements Serializable {
     }
 
     private boolean tentaConnessione(final IndirizzoConnessione i) throws IOException {
+        chiudi();
         telnet = new Socket();
         telnet.connect(new InetSocketAddress(i.ip, 55443), i.tempo);
         telnet.setSoTimeout(500);
