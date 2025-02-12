@@ -56,8 +56,6 @@ public class Main implements Serializable {
     private PannelloAnimazioni pannelloAnimazioni;
     private String nomeLampadina;
 
-    private Connessione connessione = null;
-
     public static void main(String[] args) throws IOException {
         new Main(args);
     }
@@ -91,9 +89,9 @@ public class Main implements Serializable {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         frame.setBounds(screenSize.width / 2 - d(265), screenSize.height / 2 - (pannelloConnessione.getHeight() + rosso.getHeight()), d(530), rosso.getHeight() + pannelloConnessione.getHeight());
 
-        connessione = new Connessione(this);
-        if (connessione.connetti(true)) {
-            final String[] proprieta = connessione.scaricaProprieta();
+        Connessione.inizializza(this);
+        if (Connessione.istanza().connetti(true)) {
+            final String[] proprieta = Connessione.istanza().scaricaProprieta();
             tornaStatico();
             configuraPannelloPrincipaleConStatoLampada(proprieta);
             schedulaExtListener();
@@ -120,17 +118,16 @@ public class Main implements Serializable {
         pannello.getSat().setValue(Integer.parseInt(statoIniziale[4]));
         nomeLampadina = statoIniziale[6];
         rosso.setTitolo(nomeLampadina);
-        pannello.setUltimaModalita(!statoIniziale[2].equals("2"));
+        pannello.setUltimoModo(!statoIniziale[2].equals("2"));
         pannello.aggiornaAnteprima();
         pannello.setModoDiretto(true);
     }
 
-    public void tornaModalitaRicerca() {
+    public void tornaModoRicerca() {
         terminaAggiornatoreWinAccent();
         extList.cancel();
         extList = new Timer();
-        connessione.chiudi();
-        connessione = new Connessione(this);
+        Connessione.istanza().chiudi();
         nomeLampadina = Strings.get("AppName");
         pannelloConnessione = new PannelloConnessione(this, false);
 
@@ -183,10 +180,10 @@ public class Main implements Serializable {
     public void schedulaExtListener() {
         extList.schedule(new TimerTask() {
             public void run() {
-                if (Arrays.asList(frame.getContentPane().getComponents()).contains(pannello) && (pannello.getcRovescia() == null || !pannello.getcRovescia().isRunning()) && aggiornatoreSchermo == null) {
+                if (Arrays.asList(frame.getContentPane().getComponents()).contains(pannello) && (pannello.getCRovescia() == null || !pannello.getCRovescia().isRunning()) && aggiornatoreSchermo == null) {
                     boolean modoPrima = pannello.getModoDiretto();
                     pannello.setModoDiretto(false);
-                    configuraPannelloPrincipaleConStatoLampada(connessione.scaricaProprieta());
+                    configuraPannelloPrincipaleConStatoLampada(Connessione.istanza().scaricaProprieta());
                     pannello.setModoDiretto(modoPrima);
                 }
             }
@@ -229,8 +226,8 @@ public class Main implements Serializable {
         pannello.getSat().setValue((int) (hsbVals[1] * 70 + 30));
         pannello.getLum().setValue((int) (hsbVals[2] * 100));
         pannello.setModoDiretto(modoPrima);
-        connessione.setHS((int) (hsbVals[0] * 360), (int) (hsbVals[1] * 70 + 30));
-        connessione.setBr((int) (hsbVals[2] * 100));
+        Connessione.istanza().setHS((int) (hsbVals[0] * 360), (int) (hsbVals[1] * 70 + 30));
+        Connessione.istanza().setBr((int) (hsbVals[2] * 100));
     }
 
     public void seguiColoreSchermo() {
@@ -238,7 +235,7 @@ public class Main implements Serializable {
             pannello.abilitaControlli(false);
             pannello.getSeguiSchermo().setText(Strings.get(Main.class, "19"));
             aggiornatoreSchermo = new Timer();
-            aggiornatoreSchermo.schedule(new TimerColoreSchermo(Configurazione.getAlgoritmo(), pannello, connessione), 0, Configurazione.getIntervalloTimer());
+            aggiornatoreSchermo.schedule(new TimerColoreSchermo(Configurazione.getAlgoritmo(), pannello, Connessione.istanza()), 0, Configurazione.getIntervalloTimer());
         } else {
             terminaAggiornatoreColoreSchermo();
         }
@@ -315,10 +312,6 @@ public class Main implements Serializable {
 
     public PannelloConnessione getPannelloConnessione() {
         return pannelloConnessione;
-    }
-
-    public Connessione getConnessione() {
-        return connessione;
     }
 
     public String getNomeLampadina() {

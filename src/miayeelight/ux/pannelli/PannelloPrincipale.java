@@ -3,6 +3,7 @@ package miayeelight.ux.pannelli;
 import miayeelight.Configurazione;
 import miayeelight.Main;
 import miayeelight.lang.Strings;
+import miayeelight.net.Connessione;
 import miayeelight.ux.componenti.Slider;
 
 import javax.swing.*;
@@ -37,7 +38,7 @@ public class PannelloPrincipale extends JPanel {
     private final Main ref;
     private Timer cRovescia = null;
     private boolean modoDiretto = true;
-    private boolean ultimaModalita = false; // false: T, true: C
+    private boolean ultimoModo = false; // false: T, true: C
     private boolean win10AccentDisegnati;
 
     public PannelloPrincipale(Main ref) {
@@ -63,10 +64,10 @@ public class PannelloPrincipale extends JPanel {
         accendi.addActionListener(click -> {
             if (accendi.getText().equals(Strings.get(PannelloPrincipale.class, "0"))) {
                 accendi.setText(Strings.get(PannelloPrincipale.class, "12"));
-                ref.getConnessione().accendi();
+                Connessione.istanza().accendi();
             } else {
                 accendi.setText(Strings.get(PannelloPrincipale.class, "0"));
-                ref.getConnessione().spegni();
+                Connessione.istanza().spegni();
             }
         });
         Integer[] listaTimer = new Integer[50];
@@ -86,7 +87,7 @@ public class PannelloPrincipale extends JPanel {
             try {
                 Object scelta = JOptionPane.showInputDialog(ref.getFrame(), Strings.get(PannelloPrincipale.class, "14"), Strings.get(PannelloPrincipale.class, "15"), JOptionPane.QUESTION_MESSAGE, ref.yee, listaTimer, 1);
                 if (scelta instanceof Integer tempo) {
-                    ref.getConnessione().timer(tempo);
+                    Connessione.istanza().timer(tempo);
                 }
             } catch (Exception e) {
                 log(e);
@@ -145,7 +146,7 @@ public class PannelloPrincipale extends JPanel {
         lum.addChangeListener(s -> descLuce.setText(Strings.get(PannelloPrincipale.class, "16") + lum.getValue() + "%"));
         lum.addChangeListener(s -> aggiornaAnteprima());
         lum.addChangeListener(s -> aggiornaAnteprima());
-        lum.addChangeListener(eventoJSlider(e -> ref.getConnessione().setBr(Math.max(lum.getValue(), 1))));
+        lum.addChangeListener(eventoJSlider(e -> Connessione.istanza().setBr(Math.max(lum.getValue(), 1))));
         lum.setOpaque(false);
         add(lum);
         y += d(40);
@@ -163,9 +164,9 @@ public class PannelloPrincipale extends JPanel {
         temperatura.setMinorTickSpacing(100);
         temperatura.setPaintTicks(true);
         temperatura.addChangeListener(s -> descTemp.setText(Strings.get(PannelloPrincipale.class, "18") + temperatura.getValue() + "K"));
-        temperatura.addChangeListener(s -> ultimaModalita = false);
+        temperatura.addChangeListener(s -> ultimoModo = false);
         temperatura.addChangeListener(s -> aggiornaAnteprima());
-        temperatura.addChangeListener(eventoJSlider(e -> ref.getConnessione().temperatura(temperatura.getValue())));
+        temperatura.addChangeListener(eventoJSlider(e -> Connessione.istanza().temperatura(temperatura.getValue())));
         add(temperatura);
         y += d(40);
         descCol.setBounds(d(10), y, d(510), d(40));
@@ -185,12 +186,12 @@ public class PannelloPrincipale extends JPanel {
         sat.setOpaque(false);
         add(hue);
         add(sat);
-        hue.addChangeListener(s -> ultimaModalita = true);
+        hue.addChangeListener(s -> ultimoModo = true);
         hue.addChangeListener(s -> aggiornaAnteprima());
-        sat.addChangeListener(s -> ultimaModalita = true);
+        sat.addChangeListener(s -> ultimoModo = true);
         sat.addChangeListener(s -> aggiornaAnteprima());
-        hue.addChangeListener(eventoJSlider(e -> ref.getConnessione().setHS(hue.getValue(), sat.getValue())));
-        sat.addChangeListener(eventoJSlider(e -> ref.getConnessione().setHS(hue.getValue(), sat.getValue())));
+        hue.addChangeListener(eventoJSlider(e -> Connessione.istanza().setHS(hue.getValue(), sat.getValue())));
+        sat.addChangeListener(eventoJSlider(e -> Connessione.istanza().setHS(hue.getValue(), sat.getValue())));
         y += d(50);
         anteprima.setBounds(d(10), y, d(510), d(20));
         anteprima.setFocusable(false);
@@ -202,7 +203,7 @@ public class PannelloPrincipale extends JPanel {
     }
 
     public void aggiornaAnteprima() {
-        if (ultimaModalita) {
+        if (ultimoModo) {
             anteprima.setBackground(new Color(Color.HSBtoRGB(((float) hue.getValue()) / 359, ((float) sat.getValue()) / 100, ((float) (lum.getValue() > 80 ? 100 : lum.getValue() + 20)) / 100)));
         } else {
             anteprima.setBackground(coloreDaTemperatura((double) (temperatura.getValue() - 1700) / 48, ((double) lum.getValue()) / 100));
@@ -298,8 +299,8 @@ public class PannelloPrincipale extends JPanel {
         return sat;
     }
 
-    public void setUltimaModalita(boolean ultimaModalita) {
-        this.ultimaModalita = ultimaModalita;
+    public void setUltimoModo(boolean ultimoModo) {
+        this.ultimoModo = ultimoModo;
     }
 
     public JButton getSeguiSchermo() {
@@ -318,7 +319,7 @@ public class PannelloPrincipale extends JPanel {
         return accendi;
     }
 
-    public Timer getcRovescia() {
+    public Timer getCRovescia() {
         return cRovescia;
     }
 

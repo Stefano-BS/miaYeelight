@@ -37,8 +37,8 @@ public class PannelloConnessione extends JPanel {
         ip.setText(Connessione.IP_DEFAULT_B_012 + Connessione.IP_DEFAULT_B_3);
         connetti.setFocusable(false);
         connetti.addActionListener(click -> {
-            if (ref.getConnessione().connettiA(ip.getText(), Strings.get(Connessione.class, "2"))) {
-                String[] proprieta = ref.getConnessione().scaricaProprieta();
+            if (Connessione.istanza().connettiA(ip.getText(), Strings.get(Connessione.class, "2"))) {
+                String[] proprieta = Connessione.istanza().scaricaProprieta();
                 ref.tornaStatico();
                 ref.configuraPannelloPrincipaleConStatoLampada(proprieta);
                 ref.schedulaExtListener();
@@ -55,8 +55,8 @@ public class PannelloConnessione extends JPanel {
             avviaScansione.setFocusable(false);
             avviaScansione.addActionListener(click -> {
                 try {
-                    if (ref.getConnessione().connetti(false)) {
-                        String[] proprieta = ref.getConnessione().scaricaProprieta();
+                    if (Connessione.istanza().connetti(false)) {
+                        String[] proprieta = Connessione.istanza().scaricaProprieta();
                         ref.tornaStatico();
                         ref.configuraPannelloPrincipaleConStatoLampada(proprieta);
                         ref.schedulaExtListener();

@@ -4,7 +4,10 @@ import miayeelight.Main;
 import miayeelight.lang.Strings;
 
 import javax.swing.*;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -15,28 +18,36 @@ import java.util.stream.IntStream;
 
 import static miayeelight.Main.log;
 
-public class Connessione implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
+public class Connessione {
 
     public static final String IP_DEFAULT_B_012 = "192.168.1.";
     public static final String IP_DEFAULT_B_3 = "100";
 
-    private transient Socket telnet = null;
-    private transient PrintStream out = null;
-    private transient BufferedReader in = null;
+    private Socket telnet = null;
+    private PrintStream out = null;
+    private BufferedReader in = null;
 
-    private transient Deque<IndirizzoConnessione> codaTentativi;
+    private Deque<IndirizzoConnessione> codaTentativi;
     private String ultimoIndirizzoConnesso = null;
 
     private final Main ref;
+    private static Connessione istanza;
 
     private record IndirizzoConnessione(String ip, int tempo) {
     }
 
-    public Connessione(Main ref) {
+    private Connessione(Main ref) {
         this.ref = ref;
+    }
+
+    public static void inizializza(Main ref) {
+        if (istanza == null) {
+            istanza = new Connessione(ref);
+        }
+    }
+
+    public static Connessione istanza() {
+        return istanza;
     }
 
     public boolean connetti(boolean ciclo) throws IOException {
@@ -47,16 +58,16 @@ public class Connessione implements Serializable {
     }
 
     private boolean trovaConMulticast() throws IOException {
-        try (final DatagramSocket discovery = new DatagramSocket(17000)) {
-            byte[] payload = "M-SEARCH * HTTP/1.1\r\nHOST: 239.255.255.250:1982\r\nMAN: \"ssdp:discover\"\r\nST: wifi_bulb".getBytes(StandardCharsets.US_ASCII);
-            DatagramPacket request = new DatagramPacket(payload, payload.length, new InetSocketAddress("239.255.255.250", 1982)); // 1982 dal protocollo Yeelight
-            discovery.send(request);
-            DatagramPacket reply = new DatagramPacket(new byte[512], 512);
-            discovery.setSoTimeout(1500);
-            discovery.receive(reply);
+        try (final DatagramSocket udpSocket = new DatagramSocket(17000)) {
+            final byte[] payload = "M-SEARCH * HTTP/1.1\r\nHOST: 239.255.255.250:1982\r\nMAN: \"ssdp:discover\"\r\nST: wifi_bulb".getBytes(StandardCharsets.US_ASCII);
+            final DatagramPacket richiesta = new DatagramPacket(payload, payload.length, new InetSocketAddress("239.255.255.250", 1982)); // 1982 dal protocollo Yeelight
+            udpSocket.send(richiesta);
+            final DatagramPacket risposta = new DatagramPacket(new byte[512], 512);
+            udpSocket.setSoTimeout(1500);
+            udpSocket.receive(risposta);
 
-            String ip = new String(reply.getData(), StandardCharsets.UTF_8);
-            discovery.disconnect();
+            String ip = new String(risposta.getData(), StandardCharsets.UTF_8);
+            udpSocket.disconnect();
 
             ip = ip.substring(ip.indexOf("yeelight://") + 11);
             ip = ip.substring(0, ip.indexOf(':'));
@@ -71,7 +82,7 @@ public class Connessione implements Serializable {
     private boolean trovaConRicercaEsaustiva() throws IOException {
         ref.getFrame().setVisible(true);
         codaTentativi = new LinkedList<>();
-        IntStream.range(2, 255).mapToObj(n -> new IndirizzoConnessione(IP_DEFAULT_B_012 + n, 250)).forEach(codaTentativi::add);
+        IntStream.range(2, 255).mapToObj(n -> new IndirizzoConnessione(IP_DEFAULT_B_012 + n, 500)).forEach(codaTentativi::add);
 
         while (!codaTentativi.isEmpty()) {
             try {
@@ -88,6 +99,7 @@ public class Connessione implements Serializable {
             }
         }
 
+        codaTentativi = null;
         return telnet != null && telnet.isConnected();
     }
 
@@ -184,8 +196,9 @@ public class Connessione implements Serializable {
 
     private String invia(String t) {
         try {
-            if (out == null && !riconnetti()) {
-                ref.tornaModalitaRicerca();
+            if (out == null && impossibileRistabilireConnessione()) {
+                ultimoIndirizzoConnesso = null;
+                ref.tornaModoRicerca();
                 return null;
             }
 
@@ -195,8 +208,9 @@ public class Connessione implements Serializable {
             if (risposta != null && risposta.contains("client quota exceeded")) {
                 chiudi();
 
-                if (!riconnetti()) {
-                    ref.tornaModalitaRicerca();
+                if (impossibileRistabilireConnessione()) {
+                    ultimoIndirizzoConnesso = null;
+                    ref.tornaModoRicerca();
                     return null;
                 }
             }
@@ -219,8 +233,9 @@ public class Connessione implements Serializable {
             try {
                 chiudi();
 
-                if (!riconnetti()) {
-                    ref.tornaModalitaRicerca();
+                if (impossibileRistabilireConnessione()) {
+                    ultimoIndirizzoConnesso = null;
+                    ref.tornaModoRicerca();
                     return null;
                 }
             } catch (IOException ex) {
@@ -230,8 +245,8 @@ public class Connessione implements Serializable {
         return null;
     }
 
-    private boolean riconnetti() throws IOException {
-        return connettiA(ultimoIndirizzoConnesso, Strings.get(Connessione.class, "6")) && connetti(false);
+    private boolean impossibileRistabilireConnessione() throws IOException {
+        return !connettiA(ultimoIndirizzoConnesso, Strings.get(Connessione.class, "6")) && !connetti(false);
     }
 
     public void chiudi() {

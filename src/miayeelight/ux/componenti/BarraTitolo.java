@@ -2,6 +2,7 @@ package miayeelight.ux.componenti;
 
 import miayeelight.Main;
 import miayeelight.lang.Strings;
+import miayeelight.net.Connessione;
 
 import javax.swing.*;
 import java.awt.*;
@@ -41,7 +42,7 @@ public class BarraTitolo extends JPanel {
 
         disconnetti.setBounds(d(490), 0, d(40), d(40));
         disconnetti.addActionListener(click -> {
-            ref.getConnessione().chiudi();
+            Connessione.istanza().chiudi();
             System.exit(0);
         });
         disconnetti.setFocusable(false);
@@ -68,12 +69,12 @@ public class BarraTitolo extends JPanel {
             } else if (click.getX() > d(40)) {
                 final String nome = JOptionPane.showInputDialog(Strings.get(Main.class, "16"), ref.getNomeLampadina());
                 if (nome != null && !nome.isEmpty()) {
-                    ref.getConnessione().cambiaNome(nome);
+                    Connessione.istanza().cambiaNome(nome);
                     ref.setNomeLampadina(nome);
                     titolo.setText(nome);
                 }
             } else if (!Arrays.asList(ref.getFrame().getContentPane().getComponents()).contains(ref.getPannelloConnessione())) {
-                ref.tornaModalitaRicerca();
+                ref.tornaModoRicerca();
             }
         }
 

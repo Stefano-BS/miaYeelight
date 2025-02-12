@@ -2,6 +2,7 @@ package miayeelight.ux.pannelli;
 
 import miayeelight.Main;
 import miayeelight.lang.Strings;
+import miayeelight.net.Connessione;
 import miayeelight.ux.componenti.Slider;
 
 import javax.swing.*;
@@ -120,7 +121,7 @@ public class PannelloAnimazioni extends JPanel {
                 valori[i][2] = coloreScelto.getRed() * 65536 + coloreScelto.getGreen() * 256 + coloreScelto.getBlue();
                 valori[i][3] = colori.get(i)[0].getValue();
             }
-            ref.getConnessione().animazione(valori);
+            Connessione.istanza().animazione(valori);
         });
         torna.setBounds(d(270), vPos, d(250), d(40));
         torna.setFocusable(false);
