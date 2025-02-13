@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -153,34 +154,40 @@ public class Connessione {
         return telnet.isConnected();
     }
 
-    @SuppressWarnings("java:S2142")
     public StatoLampada ottieniStatoAttuale() {
-        StatoLampada stato = null;
+        return leggiStato().map(rs -> {
+            final int inizio = rs.indexOf("[") + 1;
+            final int fine = rs.indexOf("]");
 
-        String rs;
+            if (inizio > 0 && fine > 0) {
+                final String[] prop = rs.substring(inizio, fine).replace("\"", "").split(",");
+
+                if (prop.length == 7) {
+                    return new StatoLampada(prop[0], prop[6], Integer.parseInt(prop[1]), Integer.parseInt(prop[5]), Integer.parseInt(prop[3]), Integer.parseInt(prop[4]), Integer.parseInt(prop[2]));
+                }
+            }
+
+            return null;
+        }).orElse(null);
+    }
+
+    @SuppressWarnings("java:S2142")
+    private Optional<String> leggiStato() {
         try {
             final String comando = "{\"id\":%d,\"method\":\"get_prop\",\"params\":[\"power\", \"bright\", \"color_mode\", \"hue\", \"sat\", \"ct\", \"name\"]}".formatted(CategoriaEseguibile.LETTURA_STATO.ordinal());
-            rs = pianifica(CategoriaEseguibile.LETTURA_STATO, () -> invia(comando, true)).get(500, TimeUnit.MILLISECONDS);
+            String rs = pianifica(CategoriaEseguibile.LETTURA_STATO, () -> invia(comando, true)).get(500, TimeUnit.MILLISECONDS);
+
             while (rs == null || !rs.startsWith("{\"id\":%d,".formatted(CategoriaEseguibile.LETTURA_STATO.ordinal()))) {
                 if (telnet == null || in == null || out == null) {
-                    return stato;
+                    return Optional.empty();
                 }
                 rs = pianifica(CategoriaEseguibile.LETTURA_STATO, () -> ricevi(true)).get(500, TimeUnit.MILLISECONDS);
             }
+            return Optional.of(rs);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             log(e);
-            return stato;
+            return Optional.empty();
         }
-
-        rs = rs.substring(19);
-        rs = rs.replace(",\"", "");
-        rs = rs.replace("]}", "");
-        rs = rs.substring(0, rs.lastIndexOf('\"'));
-        final String[] prop = rs.split("\"");
-        if (prop.length == 7) {
-            stato = new StatoLampada(prop[0], prop[6], Integer.parseInt(prop[1]), Integer.parseInt(prop[5]), Integer.parseInt(prop[3]), Integer.parseInt(prop[4]), Integer.parseInt(prop[2]));
-        }
-        return stato;
     }
 
     public void cambiaNome(String nome) {

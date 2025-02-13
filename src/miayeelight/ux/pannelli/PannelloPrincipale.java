@@ -21,8 +21,8 @@ public class PannelloPrincipale extends JPanel {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private final JButton seguiWinAccent;
-    private final JButton seguiSchermo;
+    private final JButton seguiWinAccent = new JButton(Strings.get(PannelloPrincipale.class, "9"));
+    private final JButton seguiSchermo = new JButton(Strings.get(PannelloPrincipale.class, "10"));
     private final JButton accendi = new JButton(Strings.get(PannelloPrincipale.class, "0"));
     private final JButton winAccent = new JButton(Strings.get(PannelloPrincipale.class, "4"));
     private final JButton animazioni = new JButton(Strings.get(PannelloPrincipale.class, "5"));
@@ -32,11 +32,11 @@ public class PannelloPrincipale extends JPanel {
     private final JSlider sat = Slider.fab(Slider.PRESETSAT);
     private final JSlider temperatura = Slider.fab(Slider.PRESETCT);
     private final JPanel anteprima = new JPanel();
-    private final JLabel descLuce;
-    private final JLabel descTemp;
-    private final JLabel descCol;
+
     private final Main ref;
+
     private Timer cRovescia = null;
+
     private boolean modoDiretto = true;
     private boolean ultimoModo = false; // false: T, true: C
     private boolean win10AccentDisegnati;
@@ -45,12 +45,6 @@ public class PannelloPrincipale extends JPanel {
         setLayout(null);
         setBackground(Main.bg);
         this.ref = ref;
-
-        descLuce = new JLabel(Strings.get(PannelloPrincipale.class, "16"));
-        descTemp = new JLabel(Strings.get(PannelloPrincipale.class, "18"));
-        descCol = new JLabel(Strings.get(PannelloPrincipale.class, "8"));
-        seguiWinAccent = new JButton(Strings.get(PannelloPrincipale.class, "9"));
-        seguiSchermo = new JButton(Strings.get(PannelloPrincipale.class, "10"));
 
         int y = d(10);
         accendi.setBounds(d(10), y, d(225), d(40));
@@ -129,13 +123,14 @@ public class PannelloPrincipale extends JPanel {
         animazioni.setFocusable(false);
         animazioni.addActionListener(click -> ref.apriPannelloAnimazioni());
         add(animazioni);
-        y += d(70);
+        y += d(50);
 
-        descLuce.setBounds(d(10), y, d(510), d(40));
+        final JLabel descLuce = new JLabel("\uD83D\uDD05");
+        descLuce.setBounds(d(10), y, d(80), d(40));
         descLuce.setOpaque(false);
         add(descLuce);
-        y += d(40);
-        lum.setBounds(d(10), y, d(510), d(40));
+
+        lum.setBounds(d(100), y + d(10), d(420), d(30));
         lum.setBackground(Main.trasparente);
         lum.setForeground(Color.WHITE);
         lum.setMaximum(100);
@@ -143,17 +138,19 @@ public class PannelloPrincipale extends JPanel {
         lum.setMajorTickSpacing(10);
         lum.setMinorTickSpacing(5);
         lum.setPaintTicks(true);
-        lum.addChangeListener(s -> descLuce.setText(Strings.get(PannelloPrincipale.class, "16") + lum.getValue() + "%"));
+        lum.addChangeListener(s -> descLuce.setText("\uD83D\uDD05  %d%%".formatted(lum.getValue())));
         lum.addChangeListener(s -> aggiornaAnteprima());
         lum.addChangeListener(s -> aggiornaAnteprima());
         lum.addChangeListener(eventoJSlider(e -> Connessione.istanza().setBr(Math.max(lum.getValue(), 1))));
         lum.setOpaque(false);
         add(lum);
         y += d(40);
-        descTemp.setBounds(d(10), y, d(510), d(40));
+
+        final JLabel descTemp = new JLabel("\uD83C\uDF21");
+        descTemp.setBounds(d(10), y, d(80), d(40));
         add(descTemp);
-        y += d(40);
-        temperatura.setBounds(d(10), y, d(510), d(40));
+
+        temperatura.setBounds(d(100), y + d(10), d(420), d(30));
         temperatura.setBackground(Main.trasparente);
         temperatura.setForeground(Color.WHITE);
         temperatura.setOpaque(false);
@@ -163,48 +160,60 @@ public class PannelloPrincipale extends JPanel {
         temperatura.setSnapToTicks(true);
         temperatura.setMinorTickSpacing(100);
         temperatura.setPaintTicks(true);
-        temperatura.addChangeListener(s -> descTemp.setText(Strings.get(PannelloPrincipale.class, "18") + temperatura.getValue() + "K"));
+        temperatura.addChangeListener(s -> descTemp.setText("\uD83C\uDF21  %dK".formatted(temperatura.getValue())));
         temperatura.addChangeListener(s -> ultimoModo = false);
         temperatura.addChangeListener(s -> aggiornaAnteprima());
         temperatura.addChangeListener(eventoJSlider(e -> Connessione.istanza().temperatura(temperatura.getValue())));
         add(temperatura);
         y += d(40);
-        descCol.setBounds(d(10), y, d(510), d(40));
-        add(descCol);
-        y += d(40);
-        hue.setBounds(d(10), y, d(250), d(40));
-        sat.setBounds(d(270), y, d(250), d(40));
+
+        final JLabel descHue = new JLabel("\uD83C\uDF08");
+        descHue.setBounds(d(10), y, d(80), d(40));
+        add(descHue);
+
+        hue.setBounds(d(100), y + d(10), d(420), d(30));
         hue.setBackground(Main.trasparente);
         hue.setForeground(Color.WHITE);
-        sat.setBackground(Main.trasparente);
-        sat.setForeground(Color.WHITE);
         hue.setMaximum(359);
         hue.setMinimum(0);
-        sat.setMaximum(100);
-        sat.setMinimum(0);
         hue.setOpaque(false);
-        sat.setOpaque(false);
-        add(hue);
-        add(sat);
+        hue.addChangeListener(s -> descHue.setText("\uD83C\uDF08  %dº".formatted(hue.getValue())));
         hue.addChangeListener(s -> ultimoModo = true);
         hue.addChangeListener(s -> aggiornaAnteprima());
+        hue.addChangeListener(eventoJSlider(e -> Connessione.istanza().setHS(hue.getValue(), sat.getValue())));
+        add(hue);
+        y += d(40);
+
+        final JLabel descSat = new JLabel("✴");
+        descSat.setBounds(d(10), y, d(80), d(40));
+        add(descSat);
+
+        sat.setBounds(d(100), y + d(10), d(420), d(30));
+        sat.setBackground(Main.trasparente);
+        sat.setForeground(Color.WHITE);
+        sat.setMaximum(100);
+        sat.setMinimum(0);
+        sat.setOpaque(false);
+        sat.addChangeListener(s -> descSat.setText("✴  %d%%".formatted(sat.getValue())));
         sat.addChangeListener(s -> ultimoModo = true);
         sat.addChangeListener(s -> aggiornaAnteprima());
-        hue.addChangeListener(eventoJSlider(e -> Connessione.istanza().setHS(hue.getValue(), sat.getValue())));
         sat.addChangeListener(eventoJSlider(e -> Connessione.istanza().setHS(hue.getValue(), sat.getValue())));
+        add(sat);
         y += d(50);
+
         anteprima.setBounds(d(10), y, d(510), d(20));
         anteprima.setFocusable(false);
         aggiornaAnteprima();
         add(anteprima);
         y += d(30);
+
         setSize(d(530), y);
         setVisible(true);
     }
 
     public void aggiornaAnteprima() {
         if (ultimoModo) {
-            anteprima.setBackground(new Color(Color.HSBtoRGB(((float) hue.getValue()) / 359, ((float) sat.getValue()) / 100, ((float) (lum.getValue() > 80 ? 100 : lum.getValue() + 20)) / 100)));
+            anteprima.setBackground(new Color(Color.HSBtoRGB(((float) hue.getValue()) / 359, ((float) sat.getValue()) / 100, ((float) (20 + lum.getValue() * 0.8)) / 100)));
         } else {
             anteprima.setBackground(coloreDaTemperatura((double) (temperatura.getValue() - 1700) / 48, ((double) lum.getValue()) / 100));
         }
@@ -235,9 +244,6 @@ public class PannelloPrincipale extends JPanel {
     }
 
     public void riscriviEtichette() {
-        descLuce.setText(Strings.get(PannelloPrincipale.class, "16") + lum.getValue() + "%");
-        descTemp.setText(Strings.get(PannelloPrincipale.class, "18") + temperatura.getValue() + "K");
-        descCol.setText(Strings.get(PannelloPrincipale.class, "8"));
         accendi.setText(accendi.getText().contains("\uD83D\uDCA1") ? Strings.get(PannelloPrincipale.class, "0") : Strings.get(PannelloPrincipale.class, "12"));
         winAccent.setText(Strings.get(PannelloPrincipale.class, "4"));
         seguiWinAccent.setText(Strings.get(PannelloPrincipale.class, "9"));
