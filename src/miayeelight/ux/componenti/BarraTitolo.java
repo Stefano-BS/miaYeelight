@@ -16,15 +16,19 @@ import static miayeelight.ux.schermo.Schermo.d;
 
 public class BarraTitolo extends JPanel {
 
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    public static final Color X = new Color(140, 0, 0);
+    public static final Color X_PUNTATORE = new Color(120, 0, 0);
+    public static final Color X_PREMUTA = new Color(100, 0, 0);
+
     private final JLabel titolo;
     private final JButton disconnetti = new JButton("❌");
     private final Main ref;
 
     private int lkpX = 0;
     private int lkpY = 0;
-
-    @Serial
-    private static final long serialVersionUID = 1L;
 
     public BarraTitolo(final Main ref, final ImageIcon yee) {
         this.ref = ref;
@@ -41,12 +45,9 @@ public class BarraTitolo extends JPanel {
         add(titolo);
 
         disconnetti.setBounds(d(490), 0, d(40), d(40));
-        disconnetti.addActionListener(click -> {
-            Connessione.istanza().chiudi();
-            System.exit(0);
-        });
+        disconnetti.addActionListener(click -> System.exit(0));
         disconnetti.setFocusable(false);
-        disconnetti.setBackground(new Color(120, 0, 0));
+        disconnetti.setBackground(X);
         add(disconnetti);
 
         final JLabel icona = new JLabel();
@@ -80,12 +81,12 @@ public class BarraTitolo extends JPanel {
 
         public void mouseEntered(MouseEvent click) {
             if (click.getX() > d(490)) {
-                disconnetti.setBackground(new Color(90, 0, 0));
+                disconnetti.setBackground(X_PUNTATORE);
             }
         }
 
         public void mouseExited(MouseEvent click) {
-            disconnetti.setBackground(new Color(120, 0, 0));
+            disconnetti.setBackground(X);
             lkpX = 0;
             lkpY = 0;
             titolo.setText(ref.getNomeLampadina());
@@ -93,13 +94,13 @@ public class BarraTitolo extends JPanel {
 
         public void mousePressed(MouseEvent click) {
             if (click.getX() > d(490)) {
-                disconnetti.setBackground(new Color(60, 0, 0));
+                disconnetti.setBackground(X_PREMUTA);
             }
         }
 
         public void mouseReleased(MouseEvent click) {
             if (click.getX() > d(490)) {
-                disconnetti.setBackground(new Color(120, 0, 0));
+                disconnetti.setBackground(X);
             }
             lkpX = 0;
             lkpY = 0;
@@ -124,9 +125,9 @@ public class BarraTitolo extends JPanel {
 
         public void mouseMoved(MouseEvent d) {
             if (d.getX() > d(490)) {
-                disconnetti.setBackground(new Color(90, 0, 0));
+                disconnetti.setBackground(X_PUNTATORE);
             } else {
-                disconnetti.setBackground(new Color(120, 0, 0));
+                disconnetti.setBackground(X);
             }
             if (d.getX() <= d(40) && !Arrays.asList(ref.getFrame().getContentPane().getComponents()).contains(ref.getPannelloConnessione())) {
                 titolo.setText(Strings.get(Main.class, "18"));

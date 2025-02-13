@@ -38,9 +38,9 @@ public class PannelloConnessione extends JPanel {
         connetti.setFocusable(false);
         connetti.addActionListener(click -> {
             if (Connessione.istanza().connettiA(ip.getText(), Strings.get(Connessione.class, "2"))) {
-                String[] proprieta = Connessione.istanza().scaricaProprieta();
+                final Connessione.StatoLampada stato = Connessione.istanza().ottieniStatoAttuale();
                 ref.tornaStatico();
-                ref.configuraPannelloPrincipaleConStatoLampada(proprieta);
+                ref.configuraPannelloPrincipaleConStatoLampada(stato);
                 ref.schedulaExtListener();
             }
         });
@@ -56,9 +56,9 @@ public class PannelloConnessione extends JPanel {
             avviaScansione.addActionListener(click -> {
                 try {
                     if (Connessione.istanza().connetti(false)) {
-                        String[] proprieta = Connessione.istanza().scaricaProprieta();
+                        final Connessione.StatoLampada stato = Connessione.istanza().ottieniStatoAttuale();
                         ref.tornaStatico();
-                        ref.configuraPannelloPrincipaleConStatoLampada(proprieta);
+                        ref.configuraPannelloPrincipaleConStatoLampada(stato);
                         ref.schedulaExtListener();
                     }
                 } catch (IOException e) {

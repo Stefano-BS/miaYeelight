@@ -1,5 +1,6 @@
 package miayeelight.net;
 
+import miayeelight.Configurazione;
 import miayeelight.Main;
 import miayeelight.lang.Strings;
 
@@ -13,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -22,6 +24,20 @@ public class Connessione {
 
     public static final String IP_DEFAULT_B_012 = "192.168.1.";
     public static final String IP_DEFAULT_B_3 = "100";
+
+    public static final int TIMEOUT_UDP = 1500;
+    public static final int TIMEOUT_TCP = 500;
+
+    private ExecutorService esecutore;
+    private final ConcurrentHashMap<CategoriaEseguibile, Future<?>> codaEsecuzione = new ConcurrentHashMap<>();
+
+    private enum CategoriaEseguibile {
+        LETTURA_STATO, SCRITTURA_NOME, SCRITTURA_ACCENSIONE, SCRITTURA_TIMER, SCRITTURA_STATO
+    }
+
+    public record StatoLampada(String accensione, String nome, //
+                               Integer luma, Integer temperatura, Integer hue, Integer saturazione, Integer modo) {
+    }
 
     private Socket telnet = null;
     private PrintStream out = null;
@@ -60,10 +76,10 @@ public class Connessione {
     private boolean trovaConMulticast() throws IOException {
         try (final DatagramSocket udpSocket = new DatagramSocket(17000)) {
             final byte[] payload = "M-SEARCH * HTTP/1.1\r\nHOST: 239.255.255.250:1982\r\nMAN: \"ssdp:discover\"\r\nST: wifi_bulb".getBytes(StandardCharsets.US_ASCII);
-            final DatagramPacket richiesta = new DatagramPacket(payload, payload.length, new InetSocketAddress("239.255.255.250", 1982)); // 1982 dal protocollo Yeelight
+            final DatagramPacket richiesta = new DatagramPacket(payload, payload.length, new InetSocketAddress("239.255.255.250", 1982));
             udpSocket.send(richiesta);
             final DatagramPacket risposta = new DatagramPacket(new byte[512], 512);
-            udpSocket.setSoTimeout(1500);
+            udpSocket.setSoTimeout(TIMEOUT_UDP);
             udpSocket.receive(risposta);
 
             String ip = new String(risposta.getData(), StandardCharsets.UTF_8);
@@ -82,7 +98,7 @@ public class Connessione {
     private boolean trovaConRicercaEsaustiva() throws IOException {
         ref.getFrame().setVisible(true);
         codaTentativi = new LinkedList<>();
-        IntStream.range(2, 255).mapToObj(n -> new IndirizzoConnessione(IP_DEFAULT_B_012 + n, 500)).forEach(codaTentativi::add);
+        IntStream.range(2, 255).mapToObj(n -> new IndirizzoConnessione(IP_DEFAULT_B_012 + n, TIMEOUT_TCP)).forEach(codaTentativi::add);
 
         while (!codaTentativi.isEmpty()) {
             try {
@@ -114,7 +130,9 @@ public class Connessione {
                 chiudi();
             }
             ref.getPannelloConnessione().setTestoDescrizione("");
-            JOptionPane.showMessageDialog(null, messaggio, Strings.get(Connessione.class, "3"), JOptionPane.ERROR_MESSAGE, ref.yee);
+            if (messaggio != null) {
+                JOptionPane.showMessageDialog(null, messaggio, Strings.get(Connessione.class, "3"), JOptionPane.ERROR_MESSAGE, ref.yee);
+            }
         } else {
             codaTentativi.addFirst(new IndirizzoConnessione(ip, 2000));
         }
@@ -123,98 +141,122 @@ public class Connessione {
 
     private boolean tentaConnessione(final IndirizzoConnessione i) throws IOException {
         chiudi();
+
+        esecutore = Executors.newSingleThreadExecutor();
+
         telnet = new Socket();
         telnet.connect(new InetSocketAddress(i.ip, 55443), i.tempo);
-        telnet.setSoTimeout(500);
+        telnet.setSoTimeout(TIMEOUT_TCP);
         out = new PrintStream(telnet.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(telnet.getInputStream(), StandardCharsets.UTF_8));
         ultimoIndirizzoConnesso = i.ip;
         return telnet.isConnected();
     }
 
-    public String[] scaricaProprieta() {
-        String[] proprieta = null;
+    @SuppressWarnings("java:S2142")
+    public StatoLampada ottieniStatoAttuale() {
+        StatoLampada stato = null;
 
-        String rs = invia("{\"id\":1,\"method\":\"get_prop\",\"params\":[\"power\", \"bright\", \"color_mode\", \"hue\", \"sat\", \"ct\", \"name\"]}");
-        while (rs == null || !rs.startsWith("{\"id\":1,")) {
-            if (telnet == null || in == null || out == null) {
-                return proprieta;
+        String rs;
+        try {
+            final String comando = "{\"id\":%d,\"method\":\"get_prop\",\"params\":[\"power\", \"bright\", \"color_mode\", \"hue\", \"sat\", \"ct\", \"name\"]}".formatted(CategoriaEseguibile.LETTURA_STATO.ordinal());
+            rs = pianifica(CategoriaEseguibile.LETTURA_STATO, () -> invia(comando, true)).get(500, TimeUnit.MILLISECONDS);
+            while (rs == null || !rs.startsWith("{\"id\":%d,".formatted(CategoriaEseguibile.LETTURA_STATO.ordinal()))) {
+                if (telnet == null || in == null || out == null) {
+                    return stato;
+                }
+                rs = pianifica(CategoriaEseguibile.LETTURA_STATO, () -> ricevi(true)).get(500, TimeUnit.MILLISECONDS);
             }
-            rs = ricevi();
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            log(e);
+            return stato;
         }
+
         rs = rs.substring(19);
         rs = rs.replace(",\"", "");
         rs = rs.replace("]}", "");
-        proprieta = rs.split("\"");
-        if (proprieta.length < 7) {
-            cambiaNome(Strings.get("AppName"));
-            proprieta = new String[]{proprieta[0], proprieta[1], proprieta[2], proprieta[3], proprieta[4], proprieta[5], Strings.get("AppName")};
+        rs = rs.substring(0, rs.lastIndexOf('\"'));
+        final String[] prop = rs.split("\"");
+        if (prop.length == 7) {
+            stato = new StatoLampada(prop[0], prop[6], Integer.parseInt(prop[1]), Integer.parseInt(prop[5]), Integer.parseInt(prop[3]), Integer.parseInt(prop[4]), Integer.parseInt(prop[2]));
         }
-        return proprieta;
+        return stato;
     }
 
     public void cambiaNome(String nome) {
-        invia("{\"id\":1,\"method\":\"set_name\",\"params\":[\"" + nome + "\"]}");
+        final String comando = "{\"id\":%d,\"method\":\"set_name\",\"params\":[\"%s\"]}".formatted(CategoriaEseguibile.SCRITTURA_NOME.ordinal(), nome);
+        pianifica(CategoriaEseguibile.SCRITTURA_NOME, () -> invia(comando, Configurazione.isResetAggressivo()));
     }
 
     public void accendi() {
-        invia("{\"id\":0,\"method\":\"set_power\",\"params\":[\"on\"]}");
+        final String comando = "{\"id\":%d,\"method\":\"set_power\",\"params\":[\"on\"]}".formatted(CategoriaEseguibile.SCRITTURA_ACCENSIONE.ordinal());
+        pianifica(CategoriaEseguibile.SCRITTURA_ACCENSIONE, () -> invia(comando, Configurazione.isResetAggressivo()));
     }
 
     public void spegni() {
-        invia("{\"id\":0,\"method\":\"set_power\",\"params\":[\"off\"]}");
+        final String comando = "{\"id\":%d,\"method\":\"set_power\",\"params\":[\"off\"]}".formatted(CategoriaEseguibile.SCRITTURA_ACCENSIONE.ordinal());
+        pianifica(CategoriaEseguibile.SCRITTURA_ACCENSIONE, () -> invia(comando, Configurazione.isResetAggressivo()));
     }
 
     public void timer(int minuti) {
-        invia("{\"id\":0,\"method\":\"cron_add\",\"params\":[0," + minuti + "]}");
+        final String comando = "{\"id\":%d,\"method\":\"cron_add\",\"params\":[0,%d]}".formatted(CategoriaEseguibile.SCRITTURA_TIMER.ordinal(), minuti);
+        pianifica(CategoriaEseguibile.SCRITTURA_TIMER, () -> invia(comando, Configurazione.isResetAggressivo()));
     }
 
     public void setBr(int v) {
-        invia("{\"id\":0,\"method\":\"set_bright\",\"params\":[" + v + "]}");
+        final String comando = "{\"id\":%d,\"method\":\"set_bright\",\"params\":[%d]}".formatted(CategoriaEseguibile.SCRITTURA_STATO.ordinal(), v);
+        pianifica(CategoriaEseguibile.SCRITTURA_STATO, () -> invia(comando, Configurazione.isResetAggressivo()));
     }
 
     public void temperatura(int kelvin) {
-        invia("{\"id\":0,\"method\":\"set_ct_abx\",\"params\":[" + kelvin + ",\"smooth\",500]}");
+        final String comando = "{\"id\":%d,\"method\":\"set_ct_abx\",\"params\":[%d,\"smooth\",500]}".formatted(CategoriaEseguibile.SCRITTURA_STATO.ordinal(), kelvin);
+        pianifica(CategoriaEseguibile.SCRITTURA_STATO, () -> invia(comando, Configurazione.isResetAggressivo()));
     }
 
     @SuppressWarnings("unused")
     public void setRGB(int r, int g, int b) {
-        invia("{\"id\":0,\"method\":\"set_rgb\",\"params\":[" + (r * 65536 + g * 256 + b) + "]}");
+        final String comando = "{\"id\":%d,\"method\":\"set_rgb\",\"params\":[%d]}".formatted(CategoriaEseguibile.SCRITTURA_STATO.ordinal(), r * 65536 + g * 256 + b);
+        pianifica(CategoriaEseguibile.SCRITTURA_STATO, () -> invia(comando, Configurazione.isResetAggressivo()));
     }
 
     public void setHS(int hue, int sat) {
-        invia("{\"id\":0,\"method\":\"set_hsv\",\"params\":[" + hue + "," + sat + ",\"smooth\",500]}");
+        final String comando = "{\"id\":%d,\"method\":\"set_hsv\",\"params\":[%d,%d,\"smooth\",500]}".formatted(CategoriaEseguibile.SCRITTURA_STATO.ordinal(), hue, sat);
+        pianifica(CategoriaEseguibile.SCRITTURA_STATO, () -> invia(comando, Configurazione.isResetAggressivo()));
     }
 
     public void animazione(int[][] valori) {
-        //Serie di passi tempo, modalità, valore, luminosità
         if (valori != null) {
             final String codiceAnimazione = Arrays.stream(valori).map(seq -> "%d,%d,%d,%d".formatted(seq[0], seq[1], seq[2], seq[3])).collect(Collectors.joining(","));
-            invia("{\"id\":0,\"method\":\"start_cf\",\"params\":[0, 1, \"" + codiceAnimazione + "\"]}");
+            final String comando = "{\"id\":%d,\"method\":\"start_cf\",\"params\":[0, 1, \"%s\"]}".formatted(CategoriaEseguibile.SCRITTURA_STATO.ordinal(), codiceAnimazione);
+            pianifica(CategoriaEseguibile.SCRITTURA_STATO, () -> invia(comando, Configurazione.isResetAggressivo()));
         }
     }
 
-    private String invia(String t) {
+    private <T> Future<T> pianifica(final CategoriaEseguibile categoria, final Callable<T> eseguibile) {
+        if (esecutore == null || esecutore.isShutdown() || esecutore.isTerminated()) {
+            final CompletableFuture<T> futureVuoto = new CompletableFuture<>();
+            futureVuoto.complete(null);
+            return futureVuoto;
+        }
+
+        final Future<T> future = esecutore.submit(eseguibile);
+        final Future<?> pianificazioneAttuale = codaEsecuzione.put(categoria, future);
+
+        if (pianificazioneAttuale != null && !pianificazioneAttuale.isDone() && !pianificazioneAttuale.isCancelled()) {
+            pianificazioneAttuale.cancel(false);
+        }
+
+        return future;
+    }
+
+    private String invia(final String t, boolean rispostaNecessaria) {
         try {
-            if (out == null && impossibileRistabilireConnessione()) {
-                ultimoIndirizzoConnesso = null;
-                ref.tornaModoRicerca();
+            if (out == null && tentaRiconnessione()) {
                 return null;
             }
 
             out.println(t);
-            final String risposta = ricevi();
-
-            if (risposta != null && risposta.contains("client quota exceeded")) {
-                chiudi();
-
-                if (impossibileRistabilireConnessione()) {
-                    ultimoIndirizzoConnesso = null;
-                    ref.tornaModoRicerca();
-                    return null;
-                }
-            }
-            return risposta;
+            return ricevi(rispostaNecessaria);
         } catch (Exception e) {
             log(e);
             log(Strings.get(Connessione.class, "4") + t);
@@ -222,21 +264,26 @@ public class Connessione {
         }
     }
 
-    private String ricevi() {
+    private String ricevi(boolean rispostaNecessaria) {
         try {
             final char[] buffer = new char[512];
             final int length = in.read(buffer);
-            if (length > 0) {
-                return new String(buffer, 0, length);
-            }
-        } catch (Exception e) {
-            try {
+
+            final String risposta = length > 0 ? new String(buffer, 0, length) : null;
+            if (risposta != null && risposta.contains("client quota exceeded")) {
                 chiudi();
 
-                if (impossibileRistabilireConnessione()) {
-                    ultimoIndirizzoConnesso = null;
-                    ref.tornaModoRicerca();
+                if (tentaRiconnessione()) {
                     return null;
+                }
+            }
+            return risposta;
+        } catch (Exception e) {
+            try {
+                if (rispostaNecessaria) {
+                    chiudi();
+
+                    tentaRiconnessione();
                 }
             } catch (IOException ex) {
                 log(ex);
@@ -245,11 +292,35 @@ public class Connessione {
         return null;
     }
 
-    private boolean impossibileRistabilireConnessione() throws IOException {
-        return !connettiA(ultimoIndirizzoConnesso, Strings.get(Connessione.class, "6")) && !connetti(false);
+    private boolean tentaRiconnessione() throws IOException {
+        final boolean nonConnesso = !connettiA(ultimoIndirizzoConnesso, null) && !connetti(false);
+
+        if (nonConnesso) {
+            ultimoIndirizzoConnesso = null;
+            ref.tornaModoRicerca();
+            JOptionPane.showMessageDialog(null, Strings.get(Connessione.class, "6"), Strings.get(Connessione.class, "3"), JOptionPane.ERROR_MESSAGE, ref.yee);
+        }
+
+        return nonConnesso;
     }
 
     public void chiudi() {
+        if (esecutore != null) {
+            codaEsecuzione.clear();
+            esecutore.shutdown();
+
+            try {
+                if (!esecutore.awaitTermination(1, TimeUnit.SECONDS)) {
+                    esecutore.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                esecutore.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+
+            esecutore = null;
+        }
+
         try {
             if (in != null) {
                 in.close();

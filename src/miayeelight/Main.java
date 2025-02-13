@@ -90,10 +90,13 @@ public class Main implements Serializable {
         frame.setBounds(screenSize.width / 2 - d(265), screenSize.height / 2 - (pannelloConnessione.getHeight() + rosso.getHeight()), d(530), rosso.getHeight() + pannelloConnessione.getHeight());
 
         Connessione.inizializza(this);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> Connessione.istanza().chiudi()));
+
         if (Connessione.istanza().connetti(true)) {
-            final String[] proprieta = Connessione.istanza().scaricaProprieta();
+            final Connessione.StatoLampada stato = Connessione.istanza().ottieniStatoAttuale();
             tornaStatico();
-            configuraPannelloPrincipaleConStatoLampada(proprieta);
+            configuraPannelloPrincipaleConStatoLampada(stato);
             schedulaExtListener();
             frame.setVisible(true);
         } else {
@@ -101,30 +104,28 @@ public class Main implements Serializable {
         }
     }
 
-    public void configuraPannelloPrincipaleConStatoLampada(final String[] statoIniziale) {
-        if (statoIniziale == null) {
-            return;
-        }
-        if (statoIniziale[0].equals("code")) {
+    public void configuraPannelloPrincipaleConStatoLampada(final Connessione.StatoLampada stato) {
+        if (stato == null || "code".equals(stato.accensione())) {
             return;
         }
         pannello.setModoDiretto(false);
-        if (statoIniziale[0].equals("on")) {
+        if ("on".equals(stato.accensione())) {
             pannello.getAccendi().setText(Strings.get(PannelloPrincipale.class, "12"));
         }
-        pannello.getLum().setValue(Integer.parseInt(statoIniziale[1]));
-        pannello.getTemperatura().setValue(Integer.parseInt(statoIniziale[5]));
-        pannello.getHue().setValue(Integer.parseInt(statoIniziale[3]));
-        pannello.getSat().setValue(Integer.parseInt(statoIniziale[4]));
-        nomeLampadina = statoIniziale[6];
+        pannello.getLum().setValue(stato.luma());
+        pannello.getTemperatura().setValue(stato.temperatura());
+        pannello.getHue().setValue(stato.hue());
+        pannello.getSat().setValue(stato.saturazione());
+        nomeLampadina = stato.nome();
         rosso.setTitolo(nomeLampadina);
-        pannello.setUltimoModo(!statoIniziale[2].equals("2"));
+        pannello.setUltimoModo(stato.modo() != 2);
         pannello.aggiornaAnteprima();
         pannello.setModoDiretto(true);
     }
 
     public void tornaModoRicerca() {
         terminaAggiornatoreWinAccent();
+        terminaAggiornatoreColoreSchermo();
         extList.cancel();
         extList = new Timer();
         Connessione.istanza().chiudi();
@@ -135,6 +136,7 @@ public class Main implements Serializable {
         frame.getContentPane().add(rosso, BorderLayout.NORTH);
         frame.getContentPane().add(pannelloConnessione, BorderLayout.CENTER);
         frame.setSize(rosso.getWidth(), rosso.getHeight() + pannelloConnessione.getHeight());
+        frame.repaint();
     }
 
     public void apriPannelloAnimazioni() {
@@ -183,7 +185,7 @@ public class Main implements Serializable {
                 if (Arrays.asList(frame.getContentPane().getComponents()).contains(pannello) && (pannello.getCRovescia() == null || !pannello.getCRovescia().isRunning()) && aggiornatoreSchermo == null) {
                     boolean modoPrima = pannello.getModoDiretto();
                     pannello.setModoDiretto(false);
-                    configuraPannelloPrincipaleConStatoLampada(Connessione.istanza().scaricaProprieta());
+                    configuraPannelloPrincipaleConStatoLampada(Connessione.istanza().ottieniStatoAttuale());
                     pannello.setModoDiretto(modoPrima);
                 }
             }
