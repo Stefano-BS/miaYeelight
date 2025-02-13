@@ -45,6 +45,7 @@ public class BarraTitolo extends JPanel {
         add(titolo);
 
         disconnetti.setBounds(d(490), 0, d(40), d(40));
+        disconnetti.setUI(new PulsanteRotondo(PulsanteRotondo.TipoArrotondamento.NESSUNO));
         disconnetti.addActionListener(click -> System.exit(0));
         disconnetti.setFocusable(false);
         disconnetti.setBackground(X);

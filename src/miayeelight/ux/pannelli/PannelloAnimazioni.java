@@ -3,7 +3,9 @@ package miayeelight.ux.pannelli;
 import miayeelight.Main;
 import miayeelight.lang.Strings;
 import miayeelight.net.Connessione;
+import miayeelight.ux.componenti.PulsanteRotondo;
 import miayeelight.ux.componenti.Slider;
+import miayeelight.ux.componenti.TestoRotondo;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -71,20 +73,21 @@ public class PannelloAnimazioni extends JPanel {
         salvaAnimazione.addActionListener(click -> salvaAnimazione());
         add(salvaAnimazione);
         vPos += d(50);
-        intestazione[0].setBounds(d(10), vPos, d(80), d(40));
+        intestazione[0].setBounds(d(10), vPos, d(70), d(40));
         intestazione[0].setHorizontalAlignment(SwingConstants.CENTER);
-        intestazione[1].setBounds(d(80), vPos, d(80), d(40));
+        intestazione[1].setBounds(d(90), vPos, d(110), d(40));
         intestazione[1].setHorizontalAlignment(SwingConstants.CENTER);
-        intestazione[2].setBounds(d(210), vPos, d(80), d(40));
+        intestazione[2].setBounds(d(210), vPos, d(110), d(40));
         intestazione[2].setHorizontalAlignment(SwingConstants.CENTER);
-        intestazione[3].setBounds(d(320), vPos, d(80), d(40));
+        intestazione[3].setBounds(d(330), vPos, d(110), d(40));
         intestazione[3].setHorizontalAlignment(SwingConstants.CENTER);
         add(intestazione[0]);
         add(intestazione[1]);
         add(intestazione[2]);
         add(intestazione[3]);
-        vPos += d(50);
-        tempi.add(new JTextField());
+        vPos += d(40);
+
+        tempi.add(new TestoRotondo());
         tempi.get(0).setText("1000");
         colori.add(new JSlider[]{Slider.fab(Slider.PRESETLUM), Slider.fab(Slider.PRESETTON), Slider.fab(Slider.PRESETSAT)});
         aggiuntori.add(new JButton("➕"));
@@ -93,6 +96,8 @@ public class PannelloAnimazioni extends JPanel {
         add(colori.get(0)[0]);
         add(colori.get(0)[1]);
         add(colori.get(0)[2]);
+        aggiuntori.get(0).setUI(new PulsanteRotondo(PulsanteRotondo.TipoArrotondamento.TOTALE));
+        rimovitori.get(0).setUI(new PulsanteRotondo(PulsanteRotondo.TipoArrotondamento.TOTALE));
         add(aggiuntori.get(0));
         add(rimovitori.get(0));
         ((AbstractDocument) tempi.get(0).getDocument()).setDocumentFilter(FILTRO_TEMPI);
@@ -102,10 +107,12 @@ public class PannelloAnimazioni extends JPanel {
         colori.get(0)[2].addChangeListener(sl -> aggiornaAnteprima());
         disegna();
         anteprima = new AnteprimaAnimazione(ottieniValori());
-        anteprima.setBounds(d(10), vPos, d(510), d(40));
+        anteprima.setBounds(d(10), vPos, d(510), d(30));
         add(anteprima);
-        vPos += d(50);
+        vPos += d(40);
+
         avviaAnimazione.setBounds(d(10), vPos, d(250), d(40));
+        avviaAnimazione.setFocusable(false);
         avviaAnimazione.addActionListener(click -> {
             if (tempi.stream().anyMatch(t -> t.getText().isEmpty() || Integer.parseInt(t.getText()) < 50)) {
                 JOptionPane.showMessageDialog(ref.getFrame(), Strings.get(PannelloAnimazioni.class, "8"), Strings.get(PannelloAnimazioni.class, "9"), JOptionPane.WARNING_MESSAGE);
@@ -123,13 +130,14 @@ public class PannelloAnimazioni extends JPanel {
             }
             Connessione.istanza().animazione(valori);
         });
+
         torna.setBounds(d(270), vPos, d(250), d(40));
         torna.setFocusable(false);
-        avviaAnimazione.setFocusable(false);
         torna.addActionListener(click -> ref.tornaStatico());
-        vPos += d(50);
         add(avviaAnimazione);
         add(torna);
+        vPos += d(50);
+
         setSize(new Dimension(d(530), vPos));
         setPreferredSize(new Dimension(d(530), vPos));
         setVisible(true);
@@ -199,7 +207,7 @@ public class PannelloAnimazioni extends JPanel {
         int i = 0;
 
         while (f.available() >= 16) {
-            tempi.add(new JTextField());
+            tempi.add(new TestoRotondo());
             tempi.get(i).setText("" + f.readInt());
             colori.add(new JSlider[]{Slider.fab(Slider.PRESETLUM), Slider.fab(Slider.PRESETTON), Slider.fab(Slider.PRESETSAT)});
             colori.get(i)[0].setMinimum(0);
@@ -221,6 +229,8 @@ public class PannelloAnimazioni extends JPanel {
             colori.get(i)[2].addChangeListener(sl -> aggiornaAnteprima());
             aggiuntori.add(new JButton("➕"));
             rimovitori.add(new JButton("➖"));
+            aggiuntori.get(i).setUI(new PulsanteRotondo(PulsanteRotondo.TipoArrotondamento.TOTALE));
+            rimovitori.get(i).setUI(new PulsanteRotondo(PulsanteRotondo.TipoArrotondamento.TOTALE));
             add(tempi.get(i));
             add(colori.get(i)[0]);
             add(colori.get(i)[1]);
@@ -234,22 +244,22 @@ public class PannelloAnimazioni extends JPanel {
 
     private void disegna() {
         for (int i = 0; i < tempi.size(); i++) {
-            tempi.get(i).setBounds(d(10), vPos, d(80), d(40));
+            tempi.get(i).setBounds(d(10), vPos, d(70), d(30));
             tempi.get(i).setHorizontalAlignment(SwingConstants.CENTER);
-            colori.get(i)[0].setBounds(d(100), vPos, d(100), d(40));
+            colori.get(i)[0].setBounds(d(90), vPos, d(110), d(30));
             colori.get(i)[0].setMinimum(0);
             colori.get(i)[0].setMaximum(100);
-            colori.get(i)[1].setBounds(d(210), vPos, d(100), d(40));
+            colori.get(i)[1].setBounds(d(210), vPos, d(110), d(30));
             colori.get(i)[1].setMinimum(0);
             colori.get(i)[1].setMaximum(359);
-            colori.get(i)[2].setBounds(d(320), vPos, d(100), d(40));
+            colori.get(i)[2].setBounds(d(330), vPos, d(110), d(30));
             colori.get(i)[2].setMinimum(0);
             colori.get(i)[2].setMaximum(100);
             colori.get(i)[0].setBackground(Main.trasparente);
             colori.get(i)[1].setBackground(Main.trasparente);
             colori.get(i)[2].setBackground(Main.trasparente);
-            aggiuntori.get(i).setBounds(d(430), vPos, d(40), d(40));
-            rimovitori.get(i).setBounds(d(480), vPos, d(40), d(40));
+            aggiuntori.get(i).setBounds(d(450), vPos, d(30), d(30));
+            rimovitori.get(i).setBounds(d(490), vPos, d(30), d(30));
             //Rimuovi il listener associato precedentemente perché potrebbe contenere un indice ora errato
             if (aggiuntori.get(i).getActionListeners().length != 0) {
                 aggiuntori.get(i).removeActionListener(aggiuntori.get(i).getActionListeners()[0]);
@@ -263,7 +273,7 @@ public class PannelloAnimazioni extends JPanel {
 
             aggiuntori.get(i).setFocusable(false);
             rimovitori.get(i).setFocusable(false);
-            vPos += d(50);
+            vPos += d(40);
         }
     }
 
@@ -277,6 +287,7 @@ public class PannelloAnimazioni extends JPanel {
         avviaAnimazione.setBounds(d(10), vPos, d(250), d(40));
         torna.setBounds(d(270), vPos, d(250), d(40));
         vPos += d(50);
+
         setSize(new Dimension(d(530), vPos));
         setPreferredSize(new Dimension(d(530), vPos));
         ref.getFrame().setSize(d(530), d(40) + vPos);
@@ -319,11 +330,13 @@ public class PannelloAnimazioni extends JPanel {
         @Override
         public void actionPerformed(ActionEvent arg0) {
             if (tipo) {
-                tempi.add(riga, new JTextField());
+                tempi.add(riga, new TestoRotondo());
                 tempi.get(riga).setText("1000");
                 colori.add(riga, new JSlider[]{Slider.fab(Slider.PRESETLUM), Slider.fab(Slider.PRESETTON), Slider.fab(Slider.PRESETSAT)});
                 aggiuntori.add(riga, new JButton("➕"));
                 rimovitori.add(riga, new JButton("➖"));
+                aggiuntori.get(riga).setUI(new PulsanteRotondo(PulsanteRotondo.TipoArrotondamento.TOTALE));
+                rimovitori.get(riga).setUI(new PulsanteRotondo(PulsanteRotondo.TipoArrotondamento.TOTALE));
                 add(tempi.get(riga));
                 add(colori.get(riga)[0]);
                 add(colori.get(riga)[1]);

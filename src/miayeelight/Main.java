@@ -3,6 +3,7 @@ package miayeelight;
 import miayeelight.lang.Strings;
 import miayeelight.net.Connessione;
 import miayeelight.ux.componenti.BarraTitolo;
+import miayeelight.ux.componenti.PulsanteRotondo;
 import miayeelight.ux.pannelli.PannelloAnimazioni;
 import miayeelight.ux.pannelli.PannelloConnessione;
 import miayeelight.ux.pannelli.PannelloImpostazioni;
@@ -152,8 +153,7 @@ public class Main implements Serializable {
     }
 
     public void apriPannelloImpostazioni() {
-        PannelloImpostazioni pannelloImpostazioni;
-        pannelloImpostazioni = new PannelloImpostazioni(this);
+        final PannelloImpostazioni pannelloImpostazioni = new PannelloImpostazioni(this);
         frame.getContentPane().removeAll();
         frame.getContentPane().add(rosso, BorderLayout.NORTH);
         frame.getContentPane().add(pannelloImpostazioni, BorderLayout.CENTER);
@@ -306,6 +306,7 @@ public class Main implements Serializable {
         UIManager.put("List.selectionForeground", Color.WHITE);
         UIManager.put("List.font", caratterePiccolo);
         UIManager.put("ScrollBar.background", sh1.brighter().brighter());
+        UIManager.put("ButtonUI", PulsanteRotondo.class.getName());
     }
 
     public JFrame getFrame() {

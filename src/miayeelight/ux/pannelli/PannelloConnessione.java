@@ -3,6 +3,7 @@ package miayeelight.ux.pannelli;
 import miayeelight.Main;
 import miayeelight.lang.Strings;
 import miayeelight.net.Connessione;
+import miayeelight.ux.componenti.TestoRotondo;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -25,14 +26,21 @@ public class PannelloConnessione extends JPanel {
     public PannelloConnessione(Main ref, boolean modoAutomatizzato) {
         super();
         setLayout(null);
-        JLabel intestazione = new JLabel(Strings.get(PannelloConnessione.class, "1"));
-        JButton connetti = new JButton(Strings.get(PannelloConnessione.class, "2"));
-        JTextField ip = new JTextField("");
-        intestazione.setBounds(d(10), 0, d(510), d(40));
+        int y = 0;
+
+        final JLabel intestazione = new JLabel(Strings.get(PannelloConnessione.class, "1"));
+        final JButton connetti = new JButton(Strings.get(PannelloConnessione.class, "2"));
+
+        intestazione.setBounds(d(10), y, d(510), d(40));
         add(intestazione);
-        desc.setBounds(d(10), d(50), d(510), d(40));
+        y += d(50);
+
+        desc.setBounds(d(10), y, d(510), d(40));
         desc.setFont(ref.caratterePiccolo);
         add(desc);
+        y += d(50);
+
+        final JTextField ip = new TestoRotondo("");
         ip.setHorizontalAlignment(SwingConstants.CENTER);
         ip.setText(Connessione.IP_DEFAULT_B_012 + Connessione.IP_DEFAULT_B_3);
         connetti.setFocusable(false);
@@ -48,8 +56,8 @@ public class PannelloConnessione extends JPanel {
         add(ip);
 
         if (modoAutomatizzato) {
-            ip.setBounds(d(10), d(100), d(350), d(40));
-            connetti.setBounds(d(370), d(100), d(150), d(40));
+            ip.setBounds(d(10), y, d(350), d(40));
+            connetti.setBounds(d(370), y, d(150), d(40));
         } else {
             JButton avviaScansione = new JButton(Strings.get(PannelloConnessione.class, "4"));
             avviaScansione.setFocusable(false);
@@ -65,9 +73,9 @@ public class PannelloConnessione extends JPanel {
                     log(e);
                 }
             });
-            ip.setBounds(d(10), d(100), d(200), d(40));
-            avviaScansione.setBounds(d(370), d(100), d(140), d(40));
-            connetti.setBounds(d(220), d(100), d(140), d(40));
+            ip.setBounds(d(10), y, d(200), d(40));
+            connetti.setBounds(d(220), y, d(145), d(40));
+            avviaScansione.setBounds(d(375), y, d(145), d(40));
             add(avviaScansione);
             avviaScansione.setEnabled(true);
         }
