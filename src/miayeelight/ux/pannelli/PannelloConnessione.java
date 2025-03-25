@@ -23,7 +23,7 @@ public class PannelloConnessione extends JPanel {
         desc.setText(testo);
     }
 
-    public PannelloConnessione(Main ref, boolean modoAutomatizzato) {
+    public PannelloConnessione(Main ref, boolean modoAutomatizzato, final String ipSuggerito) {
         super();
         setLayout(null);
         int y = 0;
@@ -35,14 +35,9 @@ public class PannelloConnessione extends JPanel {
         add(intestazione);
         y += d(50);
 
-        desc.setBounds(d(10), y, d(510), d(40));
-        desc.setFont(ref.caratterePiccolo);
-        add(desc);
-        y += d(50);
-
         final JTextField ip = new TestoRotondo("");
         ip.setHorizontalAlignment(SwingConstants.CENTER);
-        ip.setText(Connessione.IP_DEFAULT_B_012 + Connessione.IP_DEFAULT_B_3);
+        ip.setText(ipSuggerito);
         connetti.setFocusable(false);
         connetti.addActionListener(click -> {
             if (Connessione.istanza().connettiA(ip.getText(), Strings.get(Connessione.class, "2"))) {
@@ -56,6 +51,11 @@ public class PannelloConnessione extends JPanel {
         add(ip);
 
         if (modoAutomatizzato) {
+            desc.setBounds(d(10), y, d(510), d(40));
+            desc.setFont(ref.caratterePiccolo);
+            add(desc);
+            y += d(50);
+
             ip.setBounds(d(10), y, d(350), d(40));
             connetti.setBounds(d(370), y, d(150), d(40));
         } else {
@@ -79,8 +79,9 @@ public class PannelloConnessione extends JPanel {
             add(avviaScansione);
             avviaScansione.setEnabled(true);
         }
+        y += d(50);
 
-        setBounds(0, 0, d(530), d(150));
+        setBounds(0, 0, d(530), y);
         setVisible(true);
     }
 

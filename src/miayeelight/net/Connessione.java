@@ -67,6 +67,10 @@ public class Connessione {
         return istanza;
     }
 
+    public String getUltimoIndirizzoConnesso() {
+        return ultimoIndirizzoConnesso;
+    }
+
     public boolean connetti(boolean ciclo) throws IOException {
         if (trovaConMulticast()) {
             return true;
@@ -303,8 +307,8 @@ public class Connessione {
         final boolean nonConnesso = !connettiA(ultimoIndirizzoConnesso, null) && !connetti(false);
 
         if (nonConnesso) {
+            ref.tornaModoRicerca(ultimoIndirizzoConnesso);
             ultimoIndirizzoConnesso = null;
-            ref.tornaModoRicerca();
             JOptionPane.showMessageDialog(null, Strings.get(Connessione.class, "6"), Strings.get(Connessione.class, "3"), JOptionPane.ERROR_MESSAGE, ref.yee);
         }
 

@@ -5,14 +5,17 @@ import miayeelight.Main;
 import miayeelight.lang.Strings;
 import miayeelight.net.Connessione;
 import miayeelight.ux.componenti.Slider;
+import miayeelight.ux.componenti.TestoRotondo;
 
 import javax.swing.*;
 import javax.swing.event.ChangeListener;
+import javax.swing.text.AbstractDocument;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.Serial;
 
 import static miayeelight.Main.log;
+import static miayeelight.ux.schermo.FiltroEspressioneRegolare.FILTRO_TEMPI;
 import static miayeelight.ux.schermo.Schermo.coloreDaTemperatura;
 import static miayeelight.ux.schermo.Schermo.d;
 
@@ -31,6 +34,9 @@ public class PannelloPrincipale extends JPanel {
     private final JSlider hue = Slider.fab(Slider.PRESETTON);
     private final JSlider sat = Slider.fab(Slider.PRESETSAT);
     private final JSlider temperatura = Slider.fab(Slider.PRESETCT);
+    private final JLabel descTemp = new JLabel("\uD83C\uDF21");
+    private final JLabel descHue = new JLabel("\uD83C\uDF08");
+    private final JLabel descSat = new JLabel("✴");
     private final JPanel anteprima = new JPanel();
 
     private final Main ref;
@@ -64,24 +70,39 @@ public class PannelloPrincipale extends JPanel {
                 Connessione.istanza().spegni();
             }
         });
-        Integer[] listaTimer = new Integer[50];
-        for (int i = 1; i <= 10; i++) {
-            listaTimer[i - 1] = i;
-        }
-        for (int i = 11; i <= 30; i++) {
-            listaTimer[i - 1] = 2 * i - 10;
-        }
-        for (int i = 31; i <= 40; i++) {
-            listaTimer[i - 1] = 5 * i - 100;
-        }
-        for (int i = 41; i <= 50; i++) {
-            listaTimer[i - 1] = 10 * i - 300;
-        }
+
         timer.addActionListener(click -> {
             try {
-                Object scelta = JOptionPane.showInputDialog(ref.getFrame(), Strings.get(PannelloPrincipale.class, "14"), Strings.get(PannelloPrincipale.class, "15"), JOptionPane.QUESTION_MESSAGE, ref.yee, listaTimer, 1);
-                if (scelta instanceof Integer tempo) {
-                    Connessione.istanza().timer(tempo);
+                final JPanel finestra = new JPanel(null);
+
+                final JLabel icona = new JLabel();
+                icona.setIcon(ref.yee);
+                icona.setBounds(0, 0, d(40), d(40));
+
+                final JLabel domanda = new JLabel(Strings.get(PannelloPrincipale.class, "14"));
+                domanda.setFont(ref.caratterePiccolo);
+                domanda.setHorizontalAlignment(SwingConstants.HORIZONTAL);
+
+                final TestoRotondo tempo = new TestoRotondo();
+                tempo.setHorizontalAlignment(SwingConstants.HORIZONTAL);
+                ((AbstractDocument) tempo.getDocument()).setDocumentFilter(FILTRO_TEMPI);
+                tempo.setColumns(10);
+
+                final FontMetrics fm = domanda.getFontMetrics(ref.caratterePiccolo);
+                final double larghezza = fm.stringWidth(domanda.getText()) * 1.1;
+
+                domanda.setBounds(d(50), 0, (int) larghezza, d(25));
+                tempo.setBounds(d(50) + (int) (larghezza / 10), d(35), (int) (larghezza * 0.8), d(30));
+                finestra.setPreferredSize(new Dimension(d(50) + (int) larghezza, d(70)));
+
+                finestra.add(icona);
+                finestra.add(domanda);
+                finestra.add(tempo);
+
+                final int azione = JOptionPane.showOptionDialog(ref.getFrame(), finestra, Strings.get(PannelloPrincipale.class, "15"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null, null, null);
+
+                if (azione == JOptionPane.OK_OPTION && !tempo.getText().isEmpty()) {
+                    Connessione.istanza().timer(Integer.parseInt(tempo.getText()));
                 }
             } catch (Exception e) {
                 log(e);
@@ -146,7 +167,6 @@ public class PannelloPrincipale extends JPanel {
         add(lum);
         y += d(40);
 
-        final JLabel descTemp = new JLabel("\uD83C\uDF21");
         descTemp.setBounds(d(10), y, d(80), d(40));
         add(descTemp);
 
@@ -161,13 +181,12 @@ public class PannelloPrincipale extends JPanel {
         temperatura.setMinorTickSpacing(100);
         temperatura.setPaintTicks(true);
         temperatura.addChangeListener(s -> descTemp.setText("\uD83C\uDF21  %dK".formatted(temperatura.getValue())));
-        temperatura.addChangeListener(s -> ultimoModo = false);
+        temperatura.addChangeListener(s -> setUltimoModo(false));
         temperatura.addChangeListener(s -> aggiornaAnteprima());
         temperatura.addChangeListener(eventoJSlider(e -> Connessione.istanza().temperatura(temperatura.getValue())));
         add(temperatura);
         y += d(40);
 
-        final JLabel descHue = new JLabel("\uD83C\uDF08");
         descHue.setBounds(d(10), y, d(80), d(40));
         add(descHue);
 
@@ -178,13 +197,12 @@ public class PannelloPrincipale extends JPanel {
         hue.setMinimum(0);
         hue.setOpaque(false);
         hue.addChangeListener(s -> descHue.setText("\uD83C\uDF08  %dº".formatted(hue.getValue())));
-        hue.addChangeListener(s -> ultimoModo = true);
+        hue.addChangeListener(s -> setUltimoModo(true));
         hue.addChangeListener(s -> aggiornaAnteprima());
         hue.addChangeListener(eventoJSlider(e -> Connessione.istanza().setHS(hue.getValue(), sat.getValue())));
         add(hue);
         y += d(40);
 
-        final JLabel descSat = new JLabel("✴");
         descSat.setBounds(d(10), y, d(80), d(40));
         add(descSat);
 
@@ -195,7 +213,7 @@ public class PannelloPrincipale extends JPanel {
         sat.setMinimum(0);
         sat.setOpaque(false);
         sat.addChangeListener(s -> descSat.setText("✴  %d%%".formatted(sat.getValue())));
-        sat.addChangeListener(s -> ultimoModo = true);
+        sat.addChangeListener(s -> setUltimoModo(true));
         sat.addChangeListener(s -> aggiornaAnteprima());
         sat.addChangeListener(eventoJSlider(e -> Connessione.istanza().setHS(hue.getValue(), sat.getValue())));
         add(sat);
@@ -307,6 +325,10 @@ public class PannelloPrincipale extends JPanel {
 
     public void setUltimoModo(boolean ultimoModo) {
         this.ultimoModo = ultimoModo;
+
+        descSat.setEnabled(ultimoModo);
+        descHue.setEnabled(ultimoModo);
+        descTemp.setEnabled(!ultimoModo);
     }
 
     public JButton getSeguiSchermo() {

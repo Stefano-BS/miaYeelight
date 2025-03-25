@@ -85,7 +85,7 @@ public class Main implements Serializable {
         rosso = new BarraTitolo(this, yee);
         rosso.setBounds(0, 0, d(530), d(40));
         frame.getContentPane().add(rosso, BorderLayout.NORTH);
-        pannelloConnessione = new PannelloConnessione(this, true);
+        pannelloConnessione = new PannelloConnessione(this, true, Connessione.IP_DEFAULT_B_012 + Connessione.IP_DEFAULT_B_3);
         frame.getContentPane().add(pannelloConnessione, BorderLayout.CENTER);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         frame.setBounds(screenSize.width / 2 - d(265), screenSize.height / 2 - (pannelloConnessione.getHeight() + rosso.getHeight()), d(530), rosso.getHeight() + pannelloConnessione.getHeight());
@@ -124,14 +124,14 @@ public class Main implements Serializable {
         pannello.setModoDiretto(true);
     }
 
-    public void tornaModoRicerca() {
+    public void tornaModoRicerca(final String ipSuggerito) {
         terminaAggiornatoreWinAccent();
         terminaAggiornatoreColoreSchermo();
         extList.cancel();
         extList = new Timer();
         Connessione.istanza().chiudi();
         nomeLampadina = Strings.get("AppName");
-        pannelloConnessione = new PannelloConnessione(this, false);
+        pannelloConnessione = new PannelloConnessione(this, false, ipSuggerito);
 
         frame.getContentPane().removeAll();
         frame.getContentPane().add(rosso, BorderLayout.NORTH);
