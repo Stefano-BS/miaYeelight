@@ -38,6 +38,10 @@ public class TimerColoreSchermo extends TimerTask {
         final int tonalita;
         final int saturazioneAggiustata;
 
+        if (!connessione.isConnesso()) {
+            return;
+        }
+
         if (algoritmo == ALGORITMO_PUNTI) {
             final Color c = Schermo.ottieniMedia(campione == 2 ? 50 : 150, campione == 2 ? 0.25 : 0.4, 0.15);
             final float[] hsbVals = Color.RGBtoHSB(c.getRed(), c.getGreen(), c.getBlue(), new float[3]);

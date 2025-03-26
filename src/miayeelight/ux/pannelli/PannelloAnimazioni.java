@@ -55,9 +55,8 @@ public class PannelloAnimazioni extends JPanel {
     };
 
     public PannelloAnimazioni(Main ref) {
-        super();
+        super(null);
         this.ref = ref;
-        setLayout(null);
         setBackground(Main.bg);
         caricaAnimazione.setFocusable(false);
         salvaAnimazione.setFocusable(false);
@@ -102,9 +101,9 @@ public class PannelloAnimazioni extends JPanel {
         colori.get(0)[2].addChangeListener(sl -> aggiornaAnteprima());
         disegna();
         anteprima = new AnteprimaAnimazione(ottieniValori());
-        anteprima.setBounds(d(10), vPos, d(510), d(30));
+        anteprima.setBounds(d(10), vPos, d(510), d(40));
         add(anteprima);
-        vPos += d(40);
+        vPos += d(50);
 
         avviaAnimazione.setBounds(d(10), vPos, d(250), d(40));
         avviaAnimazione.setFocusable(false);
@@ -134,7 +133,6 @@ public class PannelloAnimazioni extends JPanel {
         vPos += d(50);
 
         setSize(new Dimension(d(530), vPos));
-        setPreferredSize(new Dimension(d(530), vPos));
         setVisible(true);
     }
 

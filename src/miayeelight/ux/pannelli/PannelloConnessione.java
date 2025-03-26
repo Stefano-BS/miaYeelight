@@ -24,8 +24,7 @@ public class PannelloConnessione extends JPanel {
     }
 
     public PannelloConnessione(Main ref, boolean modoAutomatizzato, final String ipSuggerito) {
-        super();
-        setLayout(null);
+        super(null);
         int y = 0;
 
         final JLabel intestazione = new JLabel(Strings.get(PannelloConnessione.class, "1"));
@@ -40,7 +39,9 @@ public class PannelloConnessione extends JPanel {
         ip.setText(ipSuggerito);
         connetti.setFocusable(false);
         connetti.addActionListener(click -> {
-            if (Connessione.istanza().connettiA(ip.getText(), Strings.get(Connessione.class, "2"))) {
+            Connessione.istanza().connettiA(ip.getText(), Strings.get(Connessione.class, "2"));
+
+            if (Connessione.istanza().isConnesso()) {
                 final Connessione.StatoLampada stato = Connessione.istanza().ottieniStatoAttuale();
                 ref.tornaStatico();
                 ref.configuraPannelloPrincipaleConStatoLampada(stato);
@@ -63,7 +64,8 @@ public class PannelloConnessione extends JPanel {
             avviaScansione.setFocusable(false);
             avviaScansione.addActionListener(click -> {
                 try {
-                    if (Connessione.istanza().connetti(false)) {
+                    Connessione.istanza().connetti(false);
+                    if (Connessione.istanza().isConnesso()) {
                         final Connessione.StatoLampada stato = Connessione.istanza().ottieniStatoAttuale();
                         ref.tornaStatico();
                         ref.configuraPannelloPrincipaleConStatoLampada(stato);

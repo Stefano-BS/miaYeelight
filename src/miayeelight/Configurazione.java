@@ -6,8 +6,8 @@ import miayeelight.ux.schermo.Schermo;
 import java.awt.*;
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 
 import static miayeelight.ux.schermo.TimerColoreSchermo.ALGORITMO_FOTO;
 import static miayeelight.ux.schermo.TimerColoreSchermo.ALGORITMO_PUNTI;
@@ -24,7 +24,6 @@ public class Configurazione implements Serializable {
     public static final String LANG = "lang";
     public static final String SIGMA = "sigma";
     public static final String LOG = "log";
-    public static final String RESET_AGGRESSIVO = "resetAggressivo";
 
     private static final Map<String, String> CONF_BASE = Map.of( //
             LANG, Locale.getDefault().getLanguage(), //
@@ -33,8 +32,7 @@ public class Configurazione implements Serializable {
             RATIO, "auto", //
             TIMER_INT, "350",  //
             SIGMA, "8", //
-            LOG, "no", //
-            RESET_AGGRESSIVO, "se necessario"
+            LOG, "no"
     );
 
     private static final Map<String, String[]> VALORI_AMMISSIBILI = Map.of( //
@@ -43,8 +41,7 @@ public class Configurazione implements Serializable {
             COLORE_W_10, new String[]{" no", " si"}, //
             TIMER_INT, new String[]{" 160", " 250", " 350", " 500", " 800", " 1500"}, //
             SIGMA, new String[]{" 1", " 3", " 5", " 8", " 11", " 15", " 30"}, //
-            LOG, new String[]{" no", " messaggio", " console"}, //
-            RESET_AGGRESSIVO, new String[]{" se necessario", " sempre"}
+            LOG, new String[]{" no", " messaggio", " console"}
     );
 
     public static final Set<String> IMPOSTAZIONI_NON_MODIFICABILI = Set.of(RATIO);
@@ -73,10 +70,6 @@ public class Configurazione implements Serializable {
         } catch (NumberFormatException e) {
             return Long.parseLong(CONF_BASE.get(TIMER_INT));
         }
-    }
-
-    public static boolean isResetAggressivo() {
-        return "sempre".equals(confCorrente.get(RESET_AGGRESSIVO));
     }
 
     public static void applicaConfigurazione(final String[] parametri) {

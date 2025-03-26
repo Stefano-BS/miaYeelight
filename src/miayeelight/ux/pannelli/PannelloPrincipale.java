@@ -33,7 +33,7 @@ public class PannelloPrincipale extends JPanel {
     private final JSlider lum = Slider.fab(Slider.PRESETLUM);
     private final JSlider hue = Slider.fab(Slider.PRESETTON);
     private final JSlider sat = Slider.fab(Slider.PRESETSAT);
-    private final JSlider temperatura = Slider.fab(Slider.PRESETCT);
+    private final JSlider temp = Slider.fab(Slider.PRESETCT);
     private final JLabel descTemp = new JLabel("\uD83C\uDF21");
     private final JLabel descHue = new JLabel("\uD83C\uDF08");
     private final JLabel descSat = new JLabel("✴");
@@ -48,7 +48,7 @@ public class PannelloPrincipale extends JPanel {
     private boolean win10AccentDisegnati;
 
     public PannelloPrincipale(Main ref) {
-        setLayout(null);
+        super(null);
         setBackground(Main.bg);
         this.ref = ref;
 
@@ -148,11 +148,10 @@ public class PannelloPrincipale extends JPanel {
 
         final JLabel descLuce = new JLabel("\uD83D\uDD05");
         descLuce.setBounds(d(10), y, d(80), d(40));
-        descLuce.setOpaque(false);
         add(descLuce);
 
         lum.setBounds(d(100), y + d(10), d(420), d(30));
-        lum.setBackground(Main.trasparente);
+        lum.setBackground(Main.bg);
         lum.setForeground(Color.WHITE);
         lum.setMaximum(100);
         lum.setMinimum(0);
@@ -161,37 +160,36 @@ public class PannelloPrincipale extends JPanel {
         lum.setPaintTicks(true);
         lum.addChangeListener(s -> descLuce.setText("\uD83D\uDD05  %d%%".formatted(lum.getValue())));
         lum.addChangeListener(s -> aggiornaAnteprima());
-        lum.addChangeListener(s -> aggiornaAnteprima());
+        lum.addChangeListener(s -> lum.repaint());
         lum.addChangeListener(eventoJSlider(e -> Connessione.istanza().setBr(Math.max(lum.getValue(), 1))));
-        lum.setOpaque(false);
         add(lum);
         y += d(40);
 
         descTemp.setBounds(d(10), y, d(80), d(40));
         add(descTemp);
 
-        temperatura.setBounds(d(100), y + d(10), d(420), d(30));
-        temperatura.setBackground(Main.trasparente);
-        temperatura.setForeground(Color.WHITE);
-        temperatura.setOpaque(false);
-        temperatura.setMaximum(6500);
-        temperatura.setMinimum(1700);
-        temperatura.setValue(5000);
-        temperatura.setSnapToTicks(true);
-        temperatura.setMinorTickSpacing(100);
-        temperatura.setPaintTicks(true);
-        temperatura.addChangeListener(s -> descTemp.setText("\uD83C\uDF21  %dK".formatted(temperatura.getValue())));
-        temperatura.addChangeListener(s -> setUltimoModo(false));
-        temperatura.addChangeListener(s -> aggiornaAnteprima());
-        temperatura.addChangeListener(eventoJSlider(e -> Connessione.istanza().temperatura(temperatura.getValue())));
-        add(temperatura);
+        temp.setBounds(d(100), y + d(10), d(420), d(30));
+        temp.setBackground(Main.bg);
+        temp.setForeground(Color.WHITE);
+        temp.setOpaque(false);
+        temp.setMaximum(6500);
+        temp.setMinimum(1700);
+        temp.setValue(5000);
+        temp.setSnapToTicks(true);
+        temp.setMinorTickSpacing(100);
+        temp.addChangeListener(s -> descTemp.setText("\uD83C\uDF21  %dK".formatted(temp.getValue())));
+        temp.addChangeListener(s -> setUltimoModo(false));
+        temp.addChangeListener(s -> aggiornaAnteprima());
+        temp.addChangeListener(s -> temp.repaint());
+        temp.addChangeListener(eventoJSlider(e -> Connessione.istanza().temperatura(temp.getValue())));
+        add(temp);
         y += d(40);
 
         descHue.setBounds(d(10), y, d(80), d(40));
         add(descHue);
 
         hue.setBounds(d(100), y + d(10), d(420), d(30));
-        hue.setBackground(Main.trasparente);
+        hue.setBackground(Main.bg);
         hue.setForeground(Color.WHITE);
         hue.setMaximum(359);
         hue.setMinimum(0);
@@ -199,6 +197,7 @@ public class PannelloPrincipale extends JPanel {
         hue.addChangeListener(s -> descHue.setText("\uD83C\uDF08  %dº".formatted(hue.getValue())));
         hue.addChangeListener(s -> setUltimoModo(true));
         hue.addChangeListener(s -> aggiornaAnteprima());
+        hue.addChangeListener(s -> hue.repaint());
         hue.addChangeListener(eventoJSlider(e -> Connessione.istanza().setHS(hue.getValue(), sat.getValue())));
         add(hue);
         y += d(40);
@@ -207,7 +206,7 @@ public class PannelloPrincipale extends JPanel {
         add(descSat);
 
         sat.setBounds(d(100), y + d(10), d(420), d(30));
-        sat.setBackground(Main.trasparente);
+        sat.setBackground(Main.bg);
         sat.setForeground(Color.WHITE);
         sat.setMaximum(100);
         sat.setMinimum(0);
@@ -215,6 +214,7 @@ public class PannelloPrincipale extends JPanel {
         sat.addChangeListener(s -> descSat.setText("✴  %d%%".formatted(sat.getValue())));
         sat.addChangeListener(s -> setUltimoModo(true));
         sat.addChangeListener(s -> aggiornaAnteprima());
+        sat.addChangeListener(s -> sat.repaint());
         sat.addChangeListener(eventoJSlider(e -> Connessione.istanza().setHS(hue.getValue(), sat.getValue())));
         add(sat);
         y += d(50);
@@ -233,7 +233,7 @@ public class PannelloPrincipale extends JPanel {
         if (ultimoModo) {
             anteprima.setBackground(new Color(Color.HSBtoRGB(((float) hue.getValue()) / 359, ((float) sat.getValue()) / 100, ((float) (20 + lum.getValue() * 0.8)) / 100)));
         } else {
-            anteprima.setBackground(coloreDaTemperatura((double) (temperatura.getValue() - 1700) / 48, ((double) lum.getValue()) / 100));
+            anteprima.setBackground(coloreDaTemperatura((double) (temp.getValue() - 1700) / 48, ((double) lum.getValue()) / 100));
         }
     }
 
@@ -257,15 +257,15 @@ public class PannelloPrincipale extends JPanel {
         seguiWinAccent.setEnabled(abilita);
         hue.setEnabled(abilita);
         sat.setEnabled(abilita);
-        temperatura.setEnabled(abilita);
+        temp.setEnabled(abilita);
         winAccent.setEnabled(abilita);
     }
 
-    public void riscriviEtichette() {
+    public void riscriviEtichette(boolean seguiWinAccentInEsecuzione, boolean seguiSchermoInEsecuzione) {
         accendi.setText(accendi.getText().contains("\uD83D\uDCA1") ? Strings.get(PannelloPrincipale.class, "0") : Strings.get(PannelloPrincipale.class, "12"));
         winAccent.setText(Strings.get(PannelloPrincipale.class, "4"));
-        seguiWinAccent.setText(Strings.get(PannelloPrincipale.class, "9"));
-        seguiSchermo.setText(Strings.get(PannelloPrincipale.class, "10"));
+        seguiWinAccent.setText(seguiWinAccentInEsecuzione ? Strings.get(Main.class, "19") : Strings.get(PannelloPrincipale.class, "9"));
+        seguiSchermo.setText(seguiSchermoInEsecuzione ? Strings.get(Main.class, "19") : Strings.get(PannelloPrincipale.class, "10"));
         animazioni.setText(Strings.get(PannelloPrincipale.class, "5"));
         timer.setText(Strings.get(PannelloPrincipale.class, "1"));
     }
@@ -339,8 +339,8 @@ public class PannelloPrincipale extends JPanel {
         return lum;
     }
 
-    public JSlider getTemperatura() {
-        return temperatura;
+    public JSlider getTemp() {
+        return temp;
     }
 
     public JButton getAccendi() {

@@ -25,8 +25,7 @@ public class PannelloImpostazioni extends JPanel {
     private final Map<String, JComboBox<String>> impostazioni = new HashMap<>();
 
     public PannelloImpostazioni(final Main ref) {
-        super();
-        setLayout(null);
+        super(null);
 
         this.ref = ref;
 
@@ -56,7 +55,6 @@ public class PannelloImpostazioni extends JPanel {
         vPos += 50;
 
         setSize(new Dimension(d(530), d(vPos)));
-        setPreferredSize(new Dimension(d(530), d(vPos)));
         setVisible(true);
     }
 

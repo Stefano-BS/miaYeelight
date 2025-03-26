@@ -31,9 +31,9 @@ public class BarraTitolo extends JPanel {
     private int lkpY = 0;
 
     public BarraTitolo(final Main ref, final ImageIcon yee) {
+        super(null);
         this.ref = ref;
 
-        setLayout(null);
         setBackground(new Color(160, 0, 0));
 
         titolo = new JLabel(ref.getNomeLampadina());
@@ -69,11 +69,14 @@ public class BarraTitolo extends JPanel {
             if (click.getX() > d(490)) {
                 disconnetti.doClick();
             } else if (click.getX() > d(40)) {
-                final String nome = (String) JOptionPane.showInputDialog(ref.getFrame(), Strings.get(Main.class, "16"), Strings.get(Main.class, "16"), JOptionPane.PLAIN_MESSAGE, ref.yee, null, null);
-                if (nome != null && !nome.isEmpty()) {
-                    Connessione.istanza().cambiaNome(nome);
-                    ref.setNomeLampadina(nome);
-                    titolo.setText(nome);
+                if (Connessione.istanza().isConnesso()) {
+                    final String nome = (String) JOptionPane.showInputDialog(ref.getFrame(), Strings.get(Main.class, "16"), Strings.get(Main.class, "16"), JOptionPane.PLAIN_MESSAGE, ref.yee, null, null);
+
+                    if (nome != null && !nome.isEmpty()) {
+                        Connessione.istanza().cambiaNome(nome);
+                        ref.setNomeLampadina(nome);
+                        titolo.setText(nome);
+                    }
                 }
             } else if (!Arrays.asList(ref.getFrame().getContentPane().getComponents()).contains(ref.getPannelloConnessione())) {
                 ref.tornaModoRicerca(Connessione.istanza().getUltimoIndirizzoConnesso());

@@ -3,7 +3,6 @@ package miayeelight.ux.componenti;
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicSliderUI;
 import java.awt.*;
-import java.awt.geom.RoundRectangle2D;
 import java.io.Serial;
 
 import static javax.swing.SwingConstants.HORIZONTAL;
@@ -16,16 +15,12 @@ public class Slider extends BasicSliderUI {
     private static final int TRACK_WIDTH = d(8);
     private static final int TRACK_ARC = d(8);
     private static final Dimension THUMB_SIZE = new Dimension(d(5), d(20));
-    private final RoundRectangle2D.Float trackShape = new RoundRectangle2D.Float();
+    private final Rectangle trackShape = new Rectangle();
 
     private static final Color cManopolaDefault = Color.red.darker();
-    private static final Color cBarraDefault = new Color(80, 80, 80);
-    private static final Color cBordoBarraDefault = new Color(170, 170, 170);
-    private static final Color cBarraSxDefault = Color.red.darker().darker();
-
-    private static final Color cBarra = cBarraDefault;
-    private static final Color cBordoBarra = cBordoBarraDefault;
-    private static final Color cBarraSx = cBarraSxDefault;
+    private static final Color cBarra = new Color(80, 80, 80);
+    private static final Color cBordoBarra = new Color(170, 170, 170);
+    private static final Color cBarraSx = Color.red.darker().darker();
 
     public static final int PRESETDEFAULT = 0;
     public static final int PRESETLUM = 1;
@@ -57,20 +52,17 @@ public class Slider extends BasicSliderUI {
     @Override
     protected void calculateTrackRect() {
         super.calculateTrackRect();
-        if (isHorizontal()) {
-            trackRect.y = trackRect.y + (trackRect.height - TRACK_HEIGHT) / 2;
-            trackRect.height = TRACK_HEIGHT;
+        if (slider.getOrientation() == HORIZONTAL) {
+            trackShape.setBounds(trackRect.x, trackRect.y + (trackRect.height - TRACK_HEIGHT) / 2, trackRect.width, TRACK_HEIGHT);
         } else {
-            trackRect.x = trackRect.x + (trackRect.width - TRACK_WIDTH) / 2;
-            trackRect.width = TRACK_WIDTH;
+            trackShape.setBounds(trackRect.x + (trackRect.width - TRACK_WIDTH) / 2, trackRect.y, TRACK_WIDTH, trackRect.height);
         }
-        trackShape.setRoundRect(trackRect.x, trackRect.y, trackRect.width, trackRect.height, TRACK_ARC, TRACK_ARC);
     }
 
     @Override
     protected void calculateThumbLocation() {
         super.calculateThumbLocation();
-        if (isHorizontal()) {
+        if (slider.getOrientation() == HORIZONTAL) {
             thumbRect.y = trackRect.y + (trackRect.height - thumbRect.height) / 2;
         } else {
             thumbRect.x = trackRect.x + (trackRect.width - thumbRect.width) / 2;
@@ -82,50 +74,42 @@ public class Slider extends BasicSliderUI {
         return THUMB_SIZE;
     }
 
-    private boolean isHorizontal() {
-        return slider.getOrientation() == HORIZONTAL;
-    }
-
     @Override
     public void paintTrack(final Graphics g) {
-        Graphics2D g2 = (Graphics2D) g;
-        Shape clip = g2.getClip();
-        boolean inverted = slider.getInverted();
+        final Shape clip = g.getClip();
+        g.setClip(null);
 
         // Colora il bordo
-        g2.setColor(cBordoBarra);
-        g2.fill(trackShape);
+        g.setColor(cBordoBarra);
+        g.fillRoundRect(trackShape.x, trackShape.y, trackShape.width, trackShape.height, TRACK_ARC, TRACK_ARC);
 
         // Colora la barra
-        g2.setColor(cBarra);
-        g2.setClip(trackShape);
-        trackShape.y += 1;
-        g2.fill(trackShape);
+        g.setColor(cBarra);
+        g.fillRoundRect(trackShape.x, trackShape.y + 1, trackShape.width, trackShape.height, TRACK_ARC, TRACK_ARC);
 
         // Colora la parte della barra a sinistra della manopola
-        if (isHorizontal()) {
-            if (slider.getComponentOrientation().isLeftToRight()) {
-                inverted = !inverted;
-            }
-            int thumbPos = thumbRect.x + thumbRect.width / 2;
+        g.setColor(coloreTema());
+        if (slider.getOrientation() == HORIZONTAL) {
+            final boolean inverted = slider.getComponentOrientation().isLeftToRight() != slider.getInverted();
+            final int thumbPos = thumbRect.x + thumbRect.width / 2;
+
             if (inverted) {
-                g2.clipRect(0, 0, thumbPos, slider.getHeight());
+                g.fillRoundRect(trackShape.x, trackShape.y, thumbPos, trackShape.height, TRACK_ARC, TRACK_ARC);
             } else {
-                g2.clipRect(thumbPos, 0, slider.getWidth() - thumbPos, slider.getHeight());
+                g.fillRoundRect(thumbPos, trackShape.y, trackShape.width - thumbPos, trackShape.height, TRACK_ARC, TRACK_ARC);
             }
         } else {
-            int thumbPos = thumbRect.y + thumbRect.height / 2;
+            final boolean inverted = slider.getInverted();
+            final int thumbPos = thumbRect.y + thumbRect.height / 2;
+
             if (inverted) {
-                g2.clipRect(0, 0, slider.getHeight(), thumbPos);
+                g.fillRoundRect(trackShape.x, trackShape.y, trackShape.width, thumbPos, TRACK_ARC, TRACK_ARC);
             } else {
-                g2.clipRect(0, thumbPos, slider.getWidth(), slider.getHeight() - thumbPos);
+                g.fillRoundRect(trackShape.x, thumbPos, trackShape.width, trackShape.height - thumbPos, TRACK_ARC, TRACK_ARC);
             }
         }
 
-        g2.setColor(coloreTema());
-        g2.fill(trackShape);
-        g2.setClip(clip);
-        trackShape.y -= 1;
+        g.setClip(clip);
     }
 
     @Override
