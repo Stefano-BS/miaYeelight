@@ -12,6 +12,7 @@ import java.awt.event.MouseMotionListener;
 import java.io.Serial;
 import java.util.Arrays;
 
+import static miayeelight.ux.componenti.Logo.*;
 import static miayeelight.ux.schermo.Schermo.d;
 
 public class BarraTitolo extends JPanel {
@@ -23,6 +24,7 @@ public class BarraTitolo extends JPanel {
     public static final Color X_PUNTATORE = new Color(120, 0, 0);
     public static final Color X_PREMUTA = new Color(100, 0, 0);
 
+    private final Logo logo;
     private final JLabel titolo;
     private final JButton disconnetti = new JButton("❌");
     private final Main ref;
@@ -30,7 +32,7 @@ public class BarraTitolo extends JPanel {
     private int lkpX = 0;
     private int lkpY = 0;
 
-    public BarraTitolo(final Main ref, final ImageIcon yee) {
+    public BarraTitolo(final Main ref) {
         super(null);
         this.ref = ref;
 
@@ -51,10 +53,9 @@ public class BarraTitolo extends JPanel {
         disconnetti.setBackground(X);
         add(disconnetti);
 
-        final JLabel icona = new JLabel();
-        icona.setIcon(yee);
-        icona.setBounds(0, 0, d(40), d(40));
-        add(icona);
+        logo = new Logo();
+        logo.setBounds(0, 0, d(40), d(40));
+        add(logo);
 
         setPreferredSize(new Dimension(d(530), d(40)));
     }
@@ -79,32 +80,44 @@ public class BarraTitolo extends JPanel {
                     }
                 }
             } else if (!Arrays.asList(ref.getFrame().getContentPane().getComponents()).contains(ref.getPannelloConnessione())) {
-                ref.tornaModoRicerca(Connessione.istanza().getUltimoIndirizzoConnesso());
+                SwingUtilities.invokeLater(() -> ref.tornaModoRicerca(Connessione.istanza().getUltimoIndirizzoConnesso()));
             }
         }
 
         public void mouseEntered(MouseEvent click) {
             if (click.getX() > d(490)) {
-                disconnetti.setBackground(X_PUNTATORE);
+                SwingUtilities.invokeLater(() -> disconnetti.setBackground(X_PUNTATORE));
+            }
+            if (click.getX() <= d(40)) {
+                SwingUtilities.invokeLater(() -> logo.setBackground(LOGO_PUNTATORE));
             }
         }
 
         public void mouseExited(MouseEvent click) {
-            disconnetti.setBackground(X);
-            lkpX = 0;
-            lkpY = 0;
-            titolo.setText(ref.getNomeLampadina());
+            SwingUtilities.invokeLater(() -> {
+                disconnetti.setBackground(X);
+                logo.setBackground(LOGO_NORMALE);
+                lkpX = 0;
+                lkpY = 0;
+                titolo.setText(ref.getNomeLampadina());
+            });
         }
 
         public void mousePressed(MouseEvent click) {
             if (click.getX() > d(490)) {
-                disconnetti.setBackground(X_PREMUTA);
+                SwingUtilities.invokeLater(() -> disconnetti.setBackground(X_PREMUTA));
+            }
+            if (click.getX() <= d(40)) {
+                SwingUtilities.invokeLater(() -> logo.setBackground(LOGO_PREMUTO));
             }
         }
 
         public void mouseReleased(MouseEvent click) {
             if (click.getX() > d(490)) {
-                disconnetti.setBackground(X);
+                SwingUtilities.invokeLater(() -> disconnetti.setBackground(X));
+            }
+            if (click.getX() <= d(40)) {
+                SwingUtilities.invokeLater(() -> logo.setBackground(LOGO_NORMALE));
             }
             lkpX = 0;
             lkpY = 0;
@@ -120,7 +133,7 @@ public class BarraTitolo extends JPanel {
                 if (lkpX != 0 || lkpY != 0) {
                     int xInc = nuovaX - lkpX;
                     int yInc = nuovaY - lkpY;
-                    ref.getFrame().setLocation(nuovaX - d.getX() + xInc, nuovaY - d.getY() + yInc);
+                    SwingUtilities.invokeLater(() -> ref.getFrame().setLocation(nuovaX - d.getX() + xInc, nuovaY - d.getY() + yInc));
                 }
                 lkpX = nuovaX;
                 lkpY = nuovaY;
@@ -128,16 +141,16 @@ public class BarraTitolo extends JPanel {
         }
 
         public void mouseMoved(MouseEvent d) {
-            if (d.getX() > d(490)) {
-                disconnetti.setBackground(X_PUNTATORE);
-            } else {
-                disconnetti.setBackground(X);
-            }
-            if (d.getX() <= d(40) && !Arrays.asList(ref.getFrame().getContentPane().getComponents()).contains(ref.getPannelloConnessione())) {
-                titolo.setText(Strings.get(Main.class, "18"));
-            } else {
-                titolo.setText(ref.getNomeLampadina());
-            }
+            SwingUtilities.invokeLater(() -> {
+                disconnetti.setBackground(d.getX() > d(490) ? X_PUNTATORE : X);
+                logo.setBackground(d.getX() <= d(40) ? LOGO_PUNTATORE : LOGO_NORMALE);
+
+                if (d.getX() <= d(40) && !Arrays.asList(ref.getFrame().getContentPane().getComponents()).contains(ref.getPannelloConnessione())) {
+                    titolo.setText(Strings.get(Main.class, "18"));
+                } else {
+                    titolo.setText(ref.getNomeLampadina());
+                }
+            });
         }
     }
 

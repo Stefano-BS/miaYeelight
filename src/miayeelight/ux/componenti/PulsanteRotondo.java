@@ -43,7 +43,7 @@ public class PulsanteRotondo extends BasicButtonUI {
 
                 @Override
                 public void mouseEntered(MouseEvent e) {
-                    ricolora(sfondo.brighter());
+                    ricolora(pulsante.isEnabled() ? sfondo.brighter() : sfondo);
                 }
 
                 @Override

@@ -4,6 +4,7 @@ import miayeelight.Configurazione;
 import miayeelight.net.Connessione;
 import miayeelight.ux.pannelli.PannelloPrincipale;
 
+import javax.swing.*;
 import java.awt.*;
 import java.util.TimerTask;
 
@@ -54,11 +55,10 @@ public class TimerColoreSchermo extends TimerTask {
             saturazioneAggiustata = sigmoide(hsbVals[1], Integer.parseInt(Configurazione.get(SIGMA)));
         }
 
-        final boolean modoPrima = pannello.getModoDiretto();
-        pannello.setModoDiretto(false);
-        pannello.getHue().setValue(tonalita);
-        pannello.getSat().setValue(saturazioneAggiustata);
-        pannello.setModoDiretto(modoPrima);
+        SwingUtilities.invokeLater(() -> {
+            pannello.aggiornaValoriSlider(null, null, saturazioneAggiustata, tonalita);
+            pannello.aggiornaInterfaccia(null);
+        });
 
         campione++;
         if (campione > passoMassimo) {

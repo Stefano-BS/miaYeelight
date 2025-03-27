@@ -43,9 +43,11 @@ public class PannelloConnessione extends JPanel {
 
             if (Connessione.istanza().isConnesso()) {
                 final Connessione.StatoLampada stato = Connessione.istanza().ottieniStatoAttuale();
-                ref.tornaStatico();
-                ref.configuraPannelloPrincipaleConStatoLampada(stato);
-                ref.schedulaExtListener();
+                SwingUtilities.invokeLater(() -> {
+                    ref.tornaStatico();
+                    ref.configuraPannelloPrincipaleConStatoLampada(stato);
+                    ref.schedulaExtListener();
+                });
             }
         });
         add(connetti);
@@ -67,9 +69,11 @@ public class PannelloConnessione extends JPanel {
                     Connessione.istanza().connetti(false);
                     if (Connessione.istanza().isConnesso()) {
                         final Connessione.StatoLampada stato = Connessione.istanza().ottieniStatoAttuale();
-                        ref.tornaStatico();
-                        ref.configuraPannelloPrincipaleConStatoLampada(stato);
-                        ref.schedulaExtListener();
+                        SwingUtilities.invokeLater(() -> {
+                            ref.tornaStatico();
+                            ref.configuraPannelloPrincipaleConStatoLampada(stato);
+                            ref.schedulaExtListener();
+                        });
                     }
                 } catch (IOException e) {
                     log(e);

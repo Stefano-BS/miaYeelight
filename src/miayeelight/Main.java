@@ -42,6 +42,7 @@ public class Main implements Serializable {
     public static final Color bg = new Color(0, 0, 0);
     public static final Color trasparente = new Color(0, 0, 0, 0);
     public static final Color semiTrasparente = new Color(0, 0, 0, 200);
+    public static final Color testoDisattivo = new Color(200, 200, 200);
     public final ImageIcon yee;
 
     private Color accentColor;
@@ -84,7 +85,7 @@ public class Main implements Serializable {
             frame.setIconImage(yee.getImage());
         }
         frame.setBackground(new Color(0, 0, 0, 0));
-        rosso = new BarraTitolo(this, yee);
+        rosso = new BarraTitolo(this);
         rosso.setBounds(0, 0, d(530), d(40));
         frame.getContentPane().add(rosso);
         pannelloConnessione = new PannelloConnessione(this, true, Connessione.IP_DEFAULT_B_012 + Connessione.IP_DEFAULT_B_3);
@@ -99,11 +100,13 @@ public class Main implements Serializable {
 
         Connessione.istanza().connetti(true);
         if (Connessione.istanza().isConnesso()) {
-            final Connessione.StatoLampada stato = Connessione.istanza().ottieniStatoAttuale();
-            tornaStatico();
-            configuraPannelloPrincipaleConStatoLampada(stato);
-            schedulaExtListener();
-            frame.setVisible(true);
+            SwingUtilities.invokeLater(() -> {
+                final Connessione.StatoLampada stato = Connessione.istanza().ottieniStatoAttuale();
+                tornaStatico();
+                configuraPannelloPrincipaleConStatoLampada(stato);
+                schedulaExtListener();
+                frame.setVisible(true);
+            });
         } else {
             JOptionPane.showMessageDialog(null, "%s%s%s%s%s</ul></HTML>".formatted(Strings.get(Main.class, "4"), Strings.get(Main.class, "5"), Strings.get(Main.class, "6"), Strings.get(Main.class, "7"), Strings.get(Main.class, "8")), Strings.get(Main.class, "10"), JOptionPane.ERROR_MESSAGE, yee);
         }
@@ -113,19 +116,16 @@ public class Main implements Serializable {
         if (stato == null || "code".equals(stato.accensione())) {
             return;
         }
-        pannello.setModoDiretto(false);
-        if ("on".equals(stato.accensione())) {
-            pannello.getAccendi().setText(Strings.get(PannelloPrincipale.class, "12"));
-        }
-        pannello.getLum().setValue(stato.luma());
-        pannello.getTemp().setValue(stato.temperatura());
-        pannello.getHue().setValue(stato.hue());
-        pannello.getSat().setValue(stato.saturazione());
+
         nomeLampadina = stato.nome();
         rosso.setTitolo(nomeLampadina);
-        pannello.setUltimoModo(stato.modo() != 2);
-        pannello.aggiornaAnteprima();
-        pannello.setModoDiretto(true);
+
+        final boolean lampadaAccesa = "on".equals(stato.accensione());
+        pannello.getAccendi().setText(Strings.get(PannelloPrincipale.class, lampadaAccesa ? "12" : "0"));
+        pannello.abilitaControlli(lampadaAccesa, lampadaAccesa);
+
+        pannello.aggiornaValoriSlider(stato.luma(), stato.temperatura(), stato.hue(), stato.saturazione());
+        pannello.aggiornaInterfaccia(stato.modo() != 2);
     }
 
     public void tornaModoRicerca(final String ipSuggerito) {
@@ -147,17 +147,21 @@ public class Main implements Serializable {
     }
 
     public void riconnesso() {
-        Stream.of(frame.getContentPane().getComponents()).filter(PannelloConnessionePersa.class::isInstance).forEach(p -> {
-            frame.getContentPane().remove(p);
-            frame.revalidate();
-            frame.repaint();
-        });
+        SwingUtilities.invokeLater(() ->
+                Stream.of(frame.getContentPane().getComponents()).filter(PannelloConnessionePersa.class::isInstance).forEach(p -> {
+                    frame.getContentPane().remove(p);
+                    frame.revalidate();
+                    frame.repaint();
+                })
+        );
     }
 
     public void mostraDisconnessione() {
-        frame.getContentPane().add(new PannelloConnessionePersa(this), 0);
-        frame.revalidate();
-        frame.repaint();
+        SwingUtilities.invokeLater(() -> {
+            frame.getContentPane().add(new PannelloConnessionePersa(this), 0);
+            frame.revalidate();
+            frame.repaint();
+        });
     }
 
     public void apriPannelloAnimazioni() {
@@ -205,10 +209,7 @@ public class Main implements Serializable {
         extList.schedule(new TimerTask() {
             public void run() {
                 if (Connessione.istanza().isConnesso() && Arrays.asList(frame.getContentPane().getComponents()).contains(pannello) && (pannello.getCRovescia() == null || !pannello.getCRovescia().isRunning()) && aggiornatoreSchermo == null) {
-                    boolean modoPrima = pannello.getModoDiretto();
-                    pannello.setModoDiretto(false);
-                    configuraPannelloPrincipaleConStatoLampada(Connessione.istanza().ottieniStatoAttuale());
-                    pannello.setModoDiretto(modoPrima);
+                    SwingUtilities.invokeLater(() -> configuraPannelloPrincipaleConStatoLampada(Connessione.istanza().ottieniStatoAttuale()));
                 }
             }
         }, 2500, 2697);
@@ -221,11 +222,13 @@ public class Main implements Serializable {
             cambiaColoreDaAccent();
             aggiornatoreWinAccent = new Timer();
             aggiornatoreWinAccent.schedule(new TimerTask() {
+
                 public void run() {
                     if (accentColor.getRGB() != SystemColor.activeCaption.getRGB() && Connessione.istanza().isConnesso()) {
                         cambiaColoreDaAccent();
                     }
                 }
+
             }, 0, 2000);
         } else {
             terminaAggiornatoreWinAccent();
@@ -244,19 +247,15 @@ public class Main implements Serializable {
     public void cambiaColoreDaAccent() {
         accentColor = new Color(SystemColor.activeCaption.getRed(), SystemColor.activeCaption.getGreen(), SystemColor.activeCaption.getBlue());
         float[] hsbVals = Color.RGBtoHSB(accentColor.getRed(), accentColor.getGreen(), accentColor.getBlue(), new float[3]);
-        boolean modoPrima = pannello.getModoDiretto();
-        pannello.setModoDiretto(false);
-        pannello.getHue().setValue((int) (hsbVals[0] * 360));
-        pannello.getSat().setValue((int) (hsbVals[1] * 70 + 30));
-        pannello.getLum().setValue((int) (hsbVals[2] * 100));
-        pannello.setModoDiretto(modoPrima);
+        pannello.aggiornaValoriSlider((int) (hsbVals[2] * 100), null, (int) (hsbVals[0] * 360), (int) (hsbVals[1] * 70 + 30));
+        pannello.aggiornaInterfaccia(null);
         Connessione.istanza().setHS((int) (hsbVals[0] * 360), (int) (hsbVals[1] * 70 + 30));
         Connessione.istanza().setBr((int) (hsbVals[2] * 100));
     }
 
     public void seguiColoreSchermo() {
         if (aggiornatoreWinAccent == null && aggiornatoreSchermo == null) {
-            pannello.abilitaControlli(false);
+            pannello.abilitaControlli(false, null);
             pannello.getSeguiSchermo().setText(Strings.get(Main.class, "19"));
             aggiornatoreSchermo = new Timer();
             aggiornatoreSchermo.schedule(new TimerColoreSchermo(Configurazione.getAlgoritmo(), pannello, Connessione.istanza()), 0, Configurazione.getIntervalloTimer());
@@ -267,7 +266,7 @@ public class Main implements Serializable {
 
     public void terminaAggiornatoreColoreSchermo() {
         if (aggiornatoreSchermo != null) {
-            pannello.abilitaControlli(true);
+            pannello.abilitaControlli(true, null);
             aggiornatoreSchermo.cancel();
             aggiornatoreSchermo = null;
             pannello.getSeguiSchermo().setText(Strings.get(PannelloPrincipale.class, "10"));

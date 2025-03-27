@@ -36,7 +36,7 @@ public class Configurazione implements Serializable {
     );
 
     private static final Map<String, String[]> VALORI_AMMISSIBILI = Map.of( //
-            LANG, new String[]{" it", " pt", " es", " fr", " en"}, //
+            LANG, new String[]{" it", " bs", " pt", " es", " fr", " en"}, //
             ALGO, new String[]{" foto", " pts"}, //
             COLORE_W_10, new String[]{" no", " si"}, //
             TIMER_INT, new String[]{" 160", " 250", " 350", " 500", " 800", " 1500"}, //

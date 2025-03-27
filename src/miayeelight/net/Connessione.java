@@ -111,7 +111,7 @@ public class Connessione {
             try {
                 IndirizzoConnessione tentativo = codaTentativi.pop();
 
-                ref.getPannelloConnessione().setTestoDescrizione(Strings.get(Connessione.class, "1") + tentativo.ip);
+                ref.getPannelloConnessione().setTestoDescrizione("%s %s".formatted(Strings.get(Connessione.class, "1"), tentativo.ip));
 
                 tentaConnessione(tentativo);
                 if (connesso) {
@@ -128,7 +128,7 @@ public class Connessione {
 
     public void connettiA(final String ip, final String messaggio) {
         if (codaTentativi == null || codaTentativi.isEmpty()) {
-            ref.getPannelloConnessione().setTestoDescrizione(Strings.get(Connessione.class, "8") + ip);
+            ref.getPannelloConnessione().setTestoDescrizione("%s %s".formatted(Strings.get(Connessione.class, "8"), ip));
             try {
                 tentaConnessione(new IndirizzoConnessione(ip, 2000));
                 if (connesso) {
@@ -273,7 +273,7 @@ public class Connessione {
             return ricevi();
         } catch (Exception e) {
             log(e);
-            log(Strings.get(Connessione.class, "4") + t);
+            log(Strings.get(Connessione.class, "4") + " " + t);
             return null;
         }
     }

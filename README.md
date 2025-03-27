@@ -1,7 +1,8 @@
 # miaYeelight
 Java desktop application to command a Yeelight Color bulb, supports:
 
-**English - Italiano - Español - Português - Français**
+**English - Italiano - Español - Português - Français - Bresà**
+
 (language is inferred automatically, if not provided as calling parameter lang:val, val between it, en, es, pt, fr)
 
 As a precondition, the lamp has to be enabled for developer mode first so as it'll be possible to reach it via Wi-Fi.

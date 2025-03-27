@@ -18,6 +18,7 @@ public class Strings {
             case "pt" -> ".ptg";
             case "es" -> ".esp";
             case "fr" -> ".fra";
+            case "bs" -> ".bre";
             default -> ".eng";
         };
         try {
